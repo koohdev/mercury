@@ -104,7 +104,12 @@ export default async function DashboardPage() {
           <ChartAreaInteractive shiftsData={shifts || []} />
         </div>
         <div className="lg:col-span-1 flex flex-col">
-          <PayWidget monthlyRate={estimatedPay} />
+          <PayWidget
+            monthlyRate={estimatedPay}
+            baseRate={payRate}
+            startDate={thirtyDaysAgo}
+            endDate={new Date()}
+          />
         </div>
       </div>
 

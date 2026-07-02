@@ -37,6 +37,17 @@ export async function getAuthedClient() {
   const supabase = await createServerClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthenticated')
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('status')
+    .eq('id', user.id)
+    .single()
+
+  if (profile?.status === 'deactivated') {
+    throw new Error('Unauthorized')
+  }
+
   return { supabase, user }
 }
 

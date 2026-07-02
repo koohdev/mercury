@@ -8,12 +8,19 @@ export const metadata = {
   description: 'View your completed shifts, breaks, and shift recaps.',
 }
 
-export default async function MyLogsPage() {
+export default async function MyLogsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>
+}) {
   // Verify session
   const { data: { user } } = await getAuthUser()
   if (!user) {
     redirect('/login')
   }
+
+  const resolvedParams = await searchParams
+  const page = parseInt(resolvedParams?.page || '1', 10)
 
   const supabase = await createServerClient()
 
@@ -24,7 +31,7 @@ export default async function MyLogsPage() {
       .select('timezone')
       .eq('id', user.id)
       .single(),
-    getShiftsForUser(user.id)
+    getShiftsForUser(user.id, page, 50)
   ])
 
   const userTimezone = profileRes.data?.timezone || 'Asia/Manila'
@@ -33,6 +40,7 @@ export default async function MyLogsPage() {
     <LogsClient
       initialShifts={shifts}
       userTimezone={userTimezone}
+      page={page}
     />
   )
 }

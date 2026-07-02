@@ -91,10 +91,11 @@ export async function clockOut(shiftId: string, summary: string) {
     .is('end_time', null)
 
   if (activeBreaks && activeBreaks.length > 0) {
-    await supabase
+    const { error: breakError } = await supabase
       .from('breaks')
       .update({ end_time: new Date().toISOString() })
       .eq('id', activeBreaks[0].id)
+    if (breakError) return { error: breakError.message }
   }
 
   // 2. Complete shift

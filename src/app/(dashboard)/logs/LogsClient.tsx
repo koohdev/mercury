@@ -1,16 +1,19 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { Search } from 'lucide-react'
+import { Search, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Shift } from '@/lib/types'
 import { DataTable } from '@/components/data-table'
 
 interface LogsClientProps {
   initialShifts: Shift[]
   userTimezone: string
+  page: number
 }
 
-export default function LogsClient({ initialShifts, userTimezone }: LogsClientProps) {
+export default function LogsClient({ initialShifts, userTimezone, page }: LogsClientProps) {
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
 
   const filteredShifts = searchQuery.trim()
@@ -23,6 +26,10 @@ export default function LogsClient({ initialShifts, userTimezone }: LogsClientPr
         )
       })
     : initialShifts
+
+  const handlePageChange = (newPage: number) => {
+    router.push(`/logs?page=${newPage}`)
+  }
 
   return (
     <div className="space-y-md">
@@ -45,6 +52,27 @@ export default function LogsClient({ initialShifts, userTimezone }: LogsClientPr
           <p className="text-sm text-ink-muted mt-0.5">Full record of all your logged shifts</p>
         </div>
         <DataTable data={filteredShifts as any[]} />
+
+        {/* Pagination Controls */}
+        <div className="flex items-center justify-between border-t border-hairline px-4 lg:px-6 pt-4 mt-4">
+          <button
+            onClick={() => handlePageChange(page - 1)}
+            disabled={page <= 1}
+            className="inline-flex items-center gap-xs px-3 py-1.5 rounded-md border border-hairline text-body-sm hover:bg-surface-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Previous
+          </button>
+          <span className="text-body-sm text-ink-muted font-medium">Page {page}</span>
+          <button
+            onClick={() => handlePageChange(page + 1)}
+            disabled={initialShifts.length < 50}
+            className="inline-flex items-center gap-xs px-3 py-1.5 rounded-md border border-hairline text-body-sm hover:bg-surface-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          >
+            Next
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
       </div>
     </div>
   )

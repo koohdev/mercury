@@ -1,7 +1,8 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { Search, Calendar as CalendarIcon, Clock, Coffee, FileText, Download, User as UserIcon } from 'lucide-react'
+import { Search, Calendar as CalendarIcon, Clock, Coffee, FileText, Download, User as UserIcon, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Shift } from '@/lib/types'
 import {
   formatInterval,
@@ -20,11 +21,17 @@ interface AdminLogsClientProps {
   initialShifts: (Shift & { profiles?: { legal_full_name: string; email: string } | null })[]
   moderators: ModeratorProfile[]
   adminTimezone: string
+  page: number
 }
 
-export default function AdminLogsClient({ initialShifts, moderators, adminTimezone }: AdminLogsClientProps) {
+export default function AdminLogsClient({ initialShifts, moderators, adminTimezone, page }: AdminLogsClientProps) {
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedModeratorId, setSelectedModeratorId] = useState<string>('all')
+
+  const handlePageChange = (newPage: number) => {
+    router.push(`/admin/logs?page=${newPage}`)
+  }
 
   // Filter shifts based on moderator selection, search query
   const filteredShifts = initialShifts.filter((shift) => {
@@ -234,6 +241,27 @@ export default function AdminLogsClient({ initialShifts, moderators, adminTimezo
           })}
         </div>
       )}
+
+      {/* Pagination Controls */}
+      <div className="flex items-center justify-between border-t border-hairline pt-4 mt-6">
+        <button
+          onClick={() => handlePageChange(page - 1)}
+          disabled={page <= 1}
+          className="inline-flex items-center gap-xs px-3 py-1.5 rounded-md border border-hairline text-body-sm hover:bg-surface-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Previous
+        </button>
+        <span className="text-body-sm text-ink-muted font-medium">Page {page}</span>
+        <button
+          onClick={() => handlePageChange(page + 1)}
+          disabled={initialShifts.length < 50}
+          className="inline-flex items-center gap-xs px-3 py-1.5 rounded-md border border-hairline text-body-sm hover:bg-surface-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+        >
+          Next
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
     </div>
   )
 }

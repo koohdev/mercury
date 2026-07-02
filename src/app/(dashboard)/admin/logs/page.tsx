@@ -8,7 +8,11 @@ export const metadata = {
   description: 'View, filter, and export shift logs for all content moderators.',
 }
 
-export default async function AdminLogsPage() {
+export default async function AdminLogsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>
+}) {
   // Verify session and role
   const { data: { user } } = await getAuthUser()
   if (!user) {
@@ -20,6 +24,9 @@ export default async function AdminLogsPage() {
     redirect('/dashboard')
   }
 
+  const resolvedParams = await searchParams
+  const page = parseInt(resolvedParams?.page || '1', 10)
+
   const supabase = await createServerClient()
 
   // Fetch timezone, moderator profiles, and shifts in parallel
@@ -30,7 +37,7 @@ export default async function AdminLogsPage() {
       .eq('id', user.id)
       .single(),
     getModeratorProfiles(),
-    getAllShifts()
+    getAllShifts('all', page, 50)
   ])
 
   const adminTimezone = profileRes.data?.timezone || 'America/New_York'
@@ -40,6 +47,7 @@ export default async function AdminLogsPage() {
       initialShifts={shifts}
       moderators={profiles}
       adminTimezone={adminTimezone}
+      page={page}
     />
   )
 }

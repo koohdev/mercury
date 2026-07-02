@@ -19,7 +19,7 @@ export async function getModeratorProfiles() {
   return data || []
 }
 
-export async function getShiftsForUser(userId?: string) {
+export async function getShiftsForUser(userId?: string, page = 1, limit = 50) {
   const { data: { user } } = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
 
@@ -32,11 +32,16 @@ export async function getShiftsForUser(userId?: string) {
   }
 
   const supabase = await createServerClient()
+  
+  const from = (page - 1) * limit
+  const to = from + limit - 1
+
   const { data, error } = await supabase
     .from('shifts')
     .select('*')
     .eq('user_id', targetUserId)
     .order('clock_in', { ascending: false })
+    .range(from, to)
 
   if (error) {
     console.error('Error fetching shifts for user:', error)
@@ -46,7 +51,7 @@ export async function getShiftsForUser(userId?: string) {
   return data || []
 }
 
-export async function getAllShifts(userIdFilter?: string) {
+export async function getAllShifts(userIdFilter?: string, page = 1, limit = 50) {
   await getAdminClient() // auth check
 
   const supabase = await createServerClient()
@@ -58,6 +63,10 @@ export async function getAllShifts(userIdFilter?: string) {
   if (userIdFilter && userIdFilter !== 'all') {
     query = query.eq('user_id', userIdFilter)
   }
+
+  const from = (page - 1) * limit
+  const to = from + limit - 1
+  query = query.range(from, to)
 
   const { data, error } = await query
 
