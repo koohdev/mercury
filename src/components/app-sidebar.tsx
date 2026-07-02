@@ -225,7 +225,7 @@ export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...p
                         }
                       >
                         <Link href={link.href} className="flex items-center gap-3">
-                          <Icon className="h-4 w-4" />
+                          <Icon className="h-4 w-4 shrink-0 pointer-events-none" />
                           <span>{link.name}</span>
                         </Link>
                       </SidebarMenuButton>
@@ -261,7 +261,7 @@ export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...p
                           }
                         >
                            <Link href={link.href} className="flex items-center gap-3">
-                            <Icon className="h-4 w-4" />
+                            <Icon className="h-4 w-4 shrink-0 pointer-events-none" />
                             <span>{link.name}</span>
                           </Link>
                         </SidebarMenuButton>
@@ -294,7 +294,7 @@ export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...p
                         }
                       >
                         <Link href={link.href} className="flex items-center gap-3">
-                          <Icon className="h-4 w-4" />
+                          <Icon className="h-4 w-4 shrink-0 pointer-events-none" />
                           <span>{link.name}</span>
                         </Link>
                       </SidebarMenuButton>
