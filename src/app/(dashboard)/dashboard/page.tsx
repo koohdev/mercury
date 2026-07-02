@@ -1,4 +1,4 @@
-import { createServerClient } from "@/lib/supabase/server"
+import { createServerClient, getAuthUser } from "@/lib/supabase/server"
 import ClockWidget from "@/components/dashboard/ClockWidget"
 import { SectionCards } from "@/components/section-cards"
 import { ChartAreaInteractive } from "@/components/chart-area-interactive"
@@ -16,35 +16,36 @@ function parseIntervalToHours(intervalStr: string | null): number {
 }
 
 export default async function DashboardPage() {
-  const supabase = await createServerClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await getAuthUser()
   if (!user) return null
 
-  // 1. Fetch user profile
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("legal_full_name, pay_rate")
-    .eq("id", user.id)
-    .single()
+  const supabase = await createServerClient()
 
-  // 2. Fetch active shift (status IS 'active' OR 'on_break')
-  const { data: activeShifts } = await supabase
-    .from("shifts")
-    .select("*, breaks(*)")
-    .eq("user_id", user.id)
-    .in("status", ["active", "on_break"])
-    .order("clock_in", { ascending: false })
-    .limit(1)
+  // Fetch profile, active shifts, and all shifts in parallel
+  const [profileRes, activeShiftsRes, shiftsRes] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("legal_full_name, pay_rate")
+      .eq("id", user.id)
+      .single(),
+    supabase
+      .from("shifts")
+      .select("*, breaks(*)")
+      .eq("user_id", user.id)
+      .in("status", ["active", "on_break"])
+      .order("clock_in", { ascending: false })
+      .limit(1),
+    supabase
+      .from("shifts")
+      .select("id, clock_in, clock_out, total_active_time, total_break_time, status, summary")
+      .eq("user_id", user.id)
+      .order("clock_in", { ascending: false })
+  ])
 
+  const profile = profileRes.data
+  const activeShifts = activeShiftsRes.data
+  const shifts = shiftsRes.data
   const activeShift = activeShifts && activeShifts.length > 0 ? activeShifts[0] : null
-
-  // 3. Fetch all shifts of this user
-  const { data: shifts } = await supabase
-    .from("shifts")
-    .select("id, clock_in, clock_out, total_active_time, total_break_time, status, summary")
-    .eq("user_id", user.id)
-    .order("clock_in", { ascending: false })
 
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)

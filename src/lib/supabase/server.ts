@@ -1,6 +1,7 @@
 import { createServerClient as createSsrServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { Database } from '../types/database.types'
+import { cache } from 'react'
 
 export async function createServerClient() {
   const cookieStore = await cookies()
@@ -25,3 +26,8 @@ export async function createServerClient() {
     }
   )
 }
+
+export const getAuthUser = cache(async () => {
+  const supabase = await createServerClient()
+  return await supabase.auth.getUser()
+})

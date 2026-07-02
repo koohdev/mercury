@@ -1,4 +1,4 @@
-import { createServerClient } from '@/lib/supabase/server'
+import { createServerClient, getAuthUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import PayClient from './PayClient'
 
@@ -8,45 +8,42 @@ export const metadata = {
 }
 
 export default async function PayPage() {
-  const supabase = await createServerClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await getAuthUser()
   if (!user) redirect('/login')
 
+  const supabase = await createServerClient()
   const isAdmin = user.app_metadata?.role === 'admin'
 
-  // Fetch profile for pay_rate
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('legal_full_name, pay_rate')
-    .eq('id', user.id)
-    .single() as any
-
-  // Fetch pay records for this user (most recent first)
-  const { data: payRecords } = await supabase
-    .from('pay_records')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('period_start', { ascending: false })
-
-  // Fetch pending change requests for this user
-  const { data: changeRequests } = await supabase
-    .from('pay_change_requests')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
-
-  // If admin: also fetch all pending requests across all users with profile info
-  let adminPendingRequests = null
-  if (isAdmin) {
-    const { data } = await supabase
+  // Fetch profile, pay records, change requests, and admin requests (if applicable) in parallel
+  const [profileRes, payRecordsRes, changeRequestsRes, adminPendingRequestsRes] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('legal_full_name, pay_rate')
+      .eq('id', user.id)
+      .single() as any,
+    supabase
+      .from('pay_records')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('period_start', { ascending: false }),
+    supabase
       .from('pay_change_requests')
-      .select('*, profiles(legal_full_name, email), pay_records(period_label, amount)')
-      .eq('status', 'pending')
-      .order('created_at', { ascending: true }) as any
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false }),
+    isAdmin
+      ? (supabase
+          .from('pay_change_requests')
+          .select('*, profiles(legal_full_name, email), pay_records(period_label, amount)')
+          .eq('status', 'pending')
+          .order('created_at', { ascending: true }) as any)
+      : Promise.resolve({ data: null })
+  ])
 
-    adminPendingRequests = data || []
-  }
+  const profile = profileRes.data
+  const payRecords = payRecordsRes.data
+  const changeRequests = changeRequestsRes.data
+  const adminPendingRequests = adminPendingRequestsRes.data || null
 
   return (
     <PayClient

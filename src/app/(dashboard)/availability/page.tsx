@@ -1,4 +1,4 @@
-import { createServerClient } from '@/lib/supabase/server'
+import { createServerClient, getAuthUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import AvailabilityClient from './AvailabilityClient'
 
@@ -8,28 +8,30 @@ export const metadata = {
 }
 
 export default async function AvailabilityPage() {
-  const supabase = await createServerClient()
-  
   // Verify session
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await getAuthUser()
   if (!user) {
     redirect('/login')
   }
 
-  // Get user profile to determine timezone
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('timezone')
-    .eq('id', user.id)
-    .single() as any
+  const supabase = await createServerClient()
 
+  // Fetch timezone and availability in parallel
+  const [profileRes, availabilityRes] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('timezone')
+      .eq('id', user.id)
+      .single() as any,
+    supabase
+      .from('availability')
+      .select('*')
+      .eq('user_id', user.id)
+  ])
+
+  const profile = profileRes.data
+  const availability = availabilityRes.data
   const userTimezone = profile?.timezone || 'Asia/Manila'
-
-  // Fetch current availability
-  const { data: availability } = await supabase
-    .from('availability')
-    .select('*')
-    .eq('user_id', user.id)
 
   return (
     <AvailabilityClient

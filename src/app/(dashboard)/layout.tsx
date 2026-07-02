@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
-import { createServerClient } from "@/lib/supabase/server"
+import { createServerClient, getAuthUser } from "@/lib/supabase/server"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SiteHeader } from "@/components/site-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
@@ -11,25 +11,22 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const supabase = await createServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await getAuthUser()
 
   if (!user) {
     redirect("/login")
   }
 
+  const supabase = await createServerClient()
   const role = user.app_metadata?.role || "moderator"
   const isAdmin = role === "admin"
 
-  // Run all data queries in parallel for faster page loads
+  // Fetch completed shifts to calculate streak
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-  const [
-    { data: shifts },
-    { data: notifications },
-    { data: activeShifts },
-  ] = await Promise.all([
+  // Fetch all layout requirements in parallel
+  const [shiftsRes, notificationsRes, activeShiftsRes] = await Promise.all([
     supabase
       .from("shifts")
       .select("clock_in")
@@ -48,11 +45,15 @@ export default async function DashboardLayout({
       .select("id")
       .eq("user_id", user.id)
       .in("status", ["active", "on_break"])
-      .limit(1),
+      .limit(1)
   ])
 
+  const shifts = shiftsRes.data
   const completedDates = (shifts || []).map((s: any) => s.clock_in)
   const streakCount = calculateStreak(completedDates)
+
+  const notifications = notificationsRes.data
+  const activeShifts = activeShiftsRes.data
   const hasActiveShift = !!(activeShifts && activeShifts.length > 0)
 
   return (
@@ -82,4 +83,3 @@ export default async function DashboardLayout({
     </TooltipProvider>
   )
 }
-

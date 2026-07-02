@@ -14,7 +14,6 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarGroupContent,
-  useSidebar,
 } from "@/components/ui/sidebar"
 import Image from "next/image"
 import { NavUser } from "@/components/nav-user"
@@ -42,19 +41,10 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...props }: AppSidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const { isMobile, setOpenMobile } = useSidebar()
   const [isPending, startTransition] = React.useTransition()
-
-  // Close mobile sidebar when navigating
-  const closeMobileSidebar = React.useCallback(() => {
-    if (isMobile) {
-      setOpenMobile(false)
-    }
-  }, [isMobile, setOpenMobile])
 
   const handleClockInClick = () => {
     if (hasActiveShift) {
-      closeMobileSidebar()
       router.push("/dashboard")
       return
     }
@@ -64,7 +54,6 @@ export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...p
       if (res?.error) {
         alert(res.error)
       } else {
-        closeMobileSidebar()
         router.push("/dashboard")
         router.refresh()
       }
@@ -97,7 +86,7 @@ export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...p
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/dashboard" onClick={closeMobileSidebar} className="flex items-center gap-2 px-1">
+              <Link href="/dashboard" className="flex items-center gap-2 px-1">
                 <div className="flex h-8 w-8 items-center justify-center shrink-0">
                   <Image src="/logo.svg" alt="Mercury Marketing Logo" width={32} height={32} className="h-8 w-8 object-contain" />
                 </div>
@@ -163,7 +152,7 @@ export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...p
                           : "text-ink-subtle hover:text-primary hover:bg-surface-2 rounded-md px-3"
                       }
                     >
-                      <Link href={link.href} onClick={closeMobileSidebar} className="flex items-center gap-3">
+                      <Link href={link.href} className="flex items-center gap-3">
                         <Icon className="h-4 w-4" />
                         <span>{link.name}</span>
                       </Link>
@@ -200,7 +189,7 @@ export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...p
                           : "text-ink-subtle hover:text-primary hover:bg-surface-2 rounded-md px-3"
                       }
                     >
-                      <Link href={link.href} onClick={closeMobileSidebar} className="flex items-center gap-3">
+                      <Link href={link.href} className="flex items-center gap-3">
                         <Icon className="h-4 w-4" />
                         <span>{link.name}</span>
                       </Link>
@@ -231,7 +220,7 @@ export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...p
                           : "text-ink-subtle hover:text-primary hover:bg-surface-2 rounded-md px-3"
                       }
                     >
-                      <Link href={link.href} onClick={closeMobileSidebar} className="flex items-center gap-3">
+                      <Link href={link.href} className="flex items-center gap-3">
                         <Icon className="h-4 w-4" />
                         <span>{link.name}</span>
                       </Link>
@@ -250,4 +239,3 @@ export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...p
     </Sidebar>
   )
 }
-

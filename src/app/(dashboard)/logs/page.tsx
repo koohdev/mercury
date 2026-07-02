@@ -1,4 +1,4 @@
-import { createServerClient } from '@/lib/supabase/server'
+import { createServerClient, getAuthUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import LogsClient from './LogsClient'
 import { getShiftsForUser } from '@/lib/actions/logs'
@@ -9,25 +9,25 @@ export const metadata = {
 }
 
 export default async function MyLogsPage() {
-  const supabase = await createServerClient()
-  
   // Verify session
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await getAuthUser()
   if (!user) {
     redirect('/login')
   }
 
-  // Get user profile to check timezone
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('timezone')
-    .eq('id', user.id)
-    .single() as any
+  const supabase = await createServerClient()
 
-  const userTimezone = profile?.timezone || 'Asia/Manila'
+  // Fetch timezone and shifts in parallel
+  const [profileRes, shifts] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('timezone')
+      .eq('id', user.id)
+      .single() as any,
+    getShiftsForUser(user.id)
+  ])
 
-  // Fetch shifts for the logged-in user
-  const shifts = await getShiftsForUser(user.id)
+  const userTimezone = profileRes.data?.timezone || 'Asia/Manila'
 
   return (
     <LogsClient

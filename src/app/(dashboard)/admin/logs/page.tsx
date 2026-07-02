@@ -1,4 +1,4 @@
-import { createServerClient } from '@/lib/supabase/server'
+import { createServerClient, getAuthUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import AdminLogsClient from './AdminLogsClient'
 import { getModeratorProfiles, getAllShifts } from '@/lib/actions/logs'
@@ -9,10 +9,8 @@ export const metadata = {
 }
 
 export default async function AdminLogsPage() {
-  const supabase = await createServerClient()
-  
   // Verify session and role
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await getAuthUser()
   if (!user) {
     redirect('/login')
   }
@@ -22,18 +20,20 @@ export default async function AdminLogsPage() {
     redirect('/dashboard')
   }
 
-  // Get admin profile timezone
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('timezone')
-    .eq('id', user.id)
-    .single() as any
+  const supabase = await createServerClient()
 
-  const adminTimezone = profile?.timezone || 'America/New_York'
+  // Fetch timezone, moderator profiles, and shifts in parallel
+  const [profileRes, profiles, shifts] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('timezone')
+      .eq('id', user.id)
+      .single() as any,
+    getModeratorProfiles(),
+    getAllShifts()
+  ])
 
-  // Fetch initial data
-  const profiles = await getModeratorProfiles()
-  const shifts = await getAllShifts()
+  const adminTimezone = profileRes.data?.timezone || 'America/New_York'
 
   return (
     <AdminLogsClient

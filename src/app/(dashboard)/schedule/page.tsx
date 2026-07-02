@@ -1,24 +1,26 @@
-import { createServerClient } from '@/lib/supabase/server'
+import { createServerClient, getAuthUser } from '@/lib/supabase/server'
 import ScheduleManager from '@/components/schedule/ScheduleManager'
 
 export default async function SchedulePage() {
-  const supabase = await createServerClient()
-
-  // 1. Get current user
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await getAuthUser()
   if (!user) return null
 
-  // 2. Fetch profiles for user mapping & dropdowns
-  const { data: profiles } = await supabase
-    .from('profiles')
-    .select('id, legal_full_name, email, role')
-    .eq('status', 'active')
+  const supabase = await createServerClient()
 
-  // 3. Fetch schedule entries
-  const { data: entries } = await supabase
-    .from('schedule_entries')
-    .select('*')
-    .order('start_time', { ascending: true })
+  // Fetch profiles and schedule entries in parallel
+  const [profilesRes, entriesRes] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('id, legal_full_name, email, role')
+      .eq('status', 'active'),
+    supabase
+      .from('schedule_entries')
+      .select('*')
+      .order('start_time', { ascending: true })
+  ])
+
+  const profiles = profilesRes.data
+  const entries = entriesRes.data
 
   const role = user.app_metadata?.role || 'moderator'
   const isAdmin = role === 'admin'

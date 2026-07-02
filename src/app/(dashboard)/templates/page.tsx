@@ -1,4 +1,4 @@
-import { createServerClient } from '@/lib/supabase/server'
+import { createServerClient, getAuthUser } from '@/lib/supabase/server'
 import TemplatesClient from './TemplatesClient'
 import { redirect } from 'next/navigation'
 
@@ -8,35 +8,36 @@ export const metadata = {
 }
 
 export default async function TemplatesPage() {
-  const supabase = await createServerClient()
-  
   // Verify session
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await getAuthUser()
   if (!user) {
     redirect('/login')
   }
 
+  const supabase = await createServerClient()
   const role = user.app_metadata?.role || 'moderator'
   const isAdmin = role === 'admin'
 
-  // Fetch categories (sort_order ascending)
-  const { data: categories, error: catError } = await supabase
-    .from('template_categories')
-    .select('*')
-    .order('sort_order', { ascending: true })
+  // Fetch categories and templates in parallel
+  const [categoriesRes, templatesRes] = await Promise.all([
+    supabase
+      .from('template_categories')
+      .select('*')
+      .order('sort_order', { ascending: true }),
+    supabase
+      .from('response_templates')
+      .select('*')
+      .order('sort_order', { ascending: true })
+  ])
 
-  if (catError) {
-    console.error('Error fetching template categories:', catError)
+  const categories = categoriesRes.data
+  const templates = templatesRes.data
+
+  if (categoriesRes.error) {
+    console.error('Error fetching template categories:', categoriesRes.error)
   }
-
-  // Fetch templates (sort_order ascending)
-  const { data: templates, error: tempError } = await supabase
-    .from('response_templates')
-    .select('*')
-    .order('sort_order', { ascending: true })
-
-  if (tempError) {
-    console.error('Error fetching response templates:', tempError)
+  if (templatesRes.error) {
+    console.error('Error fetching response templates:', templatesRes.error)
   }
 
   return (
