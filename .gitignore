@@ -46,4 +46,5 @@ CLAUDE.md
 PRODUCT.md  
 .agents
 reference_images
-supabase
+/supabase
+VERCEL_DEPLOYMENT_ERROR.md
