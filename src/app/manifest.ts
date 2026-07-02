@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Clocky - Shift Tracker',
-    short_name: 'Clocky',
+    name: 'Mercury - Shift Tracker',
+    short_name: 'Mercury',
     description: 'Track your shifts and hours logged with ease.',
     start_url: '/',
     display: 'standalone',
@@ -11,7 +11,7 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: '#0A0A0A',
     icons: [
       {
-        src: '/logo.png',
+        src: '/home-icon.png',
         sizes: '192x192 512x512',
         type: 'image/png',
       },

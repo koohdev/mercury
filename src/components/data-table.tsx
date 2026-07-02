@@ -441,7 +441,8 @@ export function DataTable({
         value={activeTab}
         className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6 mt-4"
       >
-        <div className="overflow-hidden rounded-lg border border-hairline bg-surface-1">
+        {/* Table View (Desktop) */}
+        <div className="hidden lg:block overflow-hidden rounded-lg border border-hairline bg-surface-1">
           <DndContext
             collisionDetection={closestCenter}
             modifiers={[restrictToVerticalAxis]}
@@ -491,6 +492,91 @@ export function DataTable({
               </TableBody>
             </Table>
           </DndContext>
+        </div>
+
+        {/* Cards View (Mobile/Tablet) */}
+        <div className="lg:hidden space-y-sm">
+          {table.getRowModel().rows?.length ? (
+            table.getRowModel().rows.map((row) => {
+              const item = row.original
+              const status = item.status
+              return (
+                <div key={item.id} className="bg-surface-1 border border-hairline rounded-lg p-lg space-y-md">
+                  <div className="flex items-center justify-between border-b border-hairline pb-sm">
+                    <TableCellViewer item={item} />
+                    <div className="flex items-center gap-xs">
+                      <Badge
+                        variant="outline"
+                        className={`px-1.5 font-medium gap-1.5 ${
+                          status === "completed"
+                            ? "border border-green-500/30 text-green-600 dark:text-green-400 bg-transparent"
+                            : status === "on_break"
+                            ? "border-l-2 border-l-amber-500 text-amber-400 bg-amber-950/20"
+                            : "border-l-2 border-l-blue-500 text-blue-400 bg-blue-950/20"
+                        }`}
+                      >
+                        {status === "completed" ? (
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none" className="size-3.5 fill-green-500 dark:fill-green-400"><path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-1.293 5.953a1 1 0 0 0 -1.32 -.083l-.094 .083l-3.293 3.292l-1.293 -1.292l-.094 -.083a1 1 0 0 0 -1.403 1.403l.083 .094l2 2l.094 .083a1 1 0 0 0 1.226 0l.094 -.083l4 -4l.083 -.094a1 1 0 0 0 -.083 -1.32z"></path></svg>
+                        ) : (
+                          <LoaderIcon className="size-3 animate-spin" />
+                        )}
+                        <span className="capitalize">{status.replace("_", " ")}</span>
+                      </Badge>
+                      
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
+                            size="icon"
+                          >
+                            <EllipsisVerticalIcon className="size-4" />
+                            <span className="sr-only">Open menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-32 bg-surface-2 border border-hairline text-ink">
+                          <DropdownMenuItem className="cursor-pointer">Edit</DropdownMenuItem>
+                          <DropdownMenuItem className="cursor-pointer">Share</DropdownMenuItem>
+                          <DropdownMenuSeparator className="bg-hairline" />
+                          <DropdownMenuItem variant="destructive" className="cursor-pointer text-red-400">Delete</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-md text-body-sm">
+                    <div>
+                      <p className="text-eyebrow text-ink-subtle uppercase font-semibold">Active Time</p>
+                      <p className="text-ink-muted mt-xxs">
+                        {status === "completed"
+                          ? formatPostgresInterval(item.total_active_time)
+                          : "Active Shift"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-eyebrow text-ink-subtle uppercase font-semibold">Break Time</p>
+                      <p className="text-ink-muted mt-xxs">
+                        {status === "completed"
+                          ? formatPostgresInterval(item.total_break_time)
+                          : "N/A"}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="text-body-sm">
+                    <p className="text-eyebrow text-ink-subtle uppercase font-semibold">Summary / Recap</p>
+                    <p className="text-ink-muted mt-xxs break-words line-clamp-3">
+                      {item.summary || "No summary provided."}
+                    </p>
+                  </div>
+                </div>
+              )
+            })
+          ) : (
+            <div className="bg-surface-1 border border-hairline rounded-lg p-lg text-center text-ink-muted text-body-sm">
+              No shifts found.
+            </div>
+          )}
         </div>
         <div className="flex items-center justify-between px-4">
           <div className="hidden flex-1 text-sm text-ink-subtle lg:flex">

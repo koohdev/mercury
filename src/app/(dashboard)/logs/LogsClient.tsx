@@ -27,7 +27,7 @@ export default function LogsClient({ initialShifts, userTimezone }: LogsClientPr
   return (
     <div className="space-y-md">
       {/* Search bar */}
-      <div className="relative max-w-md">
+      <div className="relative w-full lg:max-w-md">
         <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-ink-subtle" />
         <input
           type="text"

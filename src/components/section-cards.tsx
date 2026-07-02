@@ -14,14 +14,18 @@ import { TrendingUpIcon } from "lucide-react"
 interface SectionCardsProps {
   totalHours: number
   completedShiftsCount: number
+  campaignsCount?: number
+  role?: 'admin' | 'moderator'
 }
 
 export function SectionCards({
   totalHours,
   completedShiftsCount,
+  campaignsCount = 0,
+  role = 'moderator',
 }: SectionCardsProps) {
   return (
-    <div className="grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 dark:*:data-[slot=card]:bg-card h-full">
+    <div className="grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs @xl/main:grid-cols-3 dark:*:data-[slot=card]:bg-card h-full">
       <Card className="@container/card">
         <CardHeader>
           <CardDescription>Hours Logged</CardDescription>
@@ -65,6 +69,33 @@ export function SectionCards({
           </div>
           <div className="text-muted-foreground">
             Total logs generated this period
+          </div>
+        </CardFooter>
+      </Card>
+      <Card className="@container/card">
+        <CardHeader>
+          <CardDescription>
+            {role === 'admin' ? 'Total Campaigns' : 'My Campaigns'}
+          </CardDescription>
+          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+            {campaignsCount}
+          </CardTitle>
+          <CardAction>
+            <Badge variant="outline">
+              <TrendingUpIcon />
+              {role === 'admin' ? 'Managed' : 'Assigned'}
+            </Badge>
+          </CardAction>
+        </CardHeader>
+        <CardFooter className="flex-col items-start gap-1.5 text-sm">
+          <div className="line-clamp-1 flex gap-2 font-medium">
+            Active tracking{" "}
+            <TrendingUpIcon className="size-4" />
+          </div>
+          <div className="text-muted-foreground">
+            {role === 'admin'
+              ? 'Total campaigns registered in portal'
+              : 'Campaigns assigned to your account'}
           </div>
         </CardFooter>
       </Card>

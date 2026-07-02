@@ -298,4 +298,14 @@ body {
   html {
     @apply font-sans;
   }
+
+  /* iOS Safe Area support for PWA standalone mode */
+  header {
+    padding-top: env(safe-area-inset-top);
+    height: calc(4rem + env(safe-area-inset-top)) !important;
+  }
+  
+  main {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 1.5rem) !important;
+  }
 }

@@ -32,7 +32,7 @@ export default function Header({ user }: HeaderProps) {
       case '/admin/logs':
         return 'All Moderator Logs'
       default:
-        return 'Clocky'
+        return 'Mercury Marketing'
     }
   }
 

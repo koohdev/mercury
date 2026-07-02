@@ -7,16 +7,24 @@ import { ThemeProvider } from "@/components/theme-provider"
 const geist = Geist({subsets:['latin'],variable:'--font-sans'})
 
 export const metadata: Metadata = {
-  title: 'Clocky',
+  title: 'Mercury Marketing',
   description: 'Track your shifts and hours logged with ease.',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Clocky',
+    title: 'Mercury Marketing',
+  },
+  icons: {
+    icon: '/favicon-1.png',
+    apple: '/home-icon.png',
   },
   other: {
     'mobile-web-app-capable': 'yes',
   }
+}
+
+export const viewport = {
+  themeColor: '#0A0A0A',
 }
 
 export default function RootLayout({

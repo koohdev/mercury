@@ -139,6 +139,24 @@ export default function PayClient({
         Projected for <span className="font-medium text-ink">{currentMonthLabel()}</span>. Actual payouts handled externally.
       </p>
 
+      {/* Need a different amount? Card */}
+      {!isAdmin && payRecords.length > 0 && (
+        <div className="bg-surface-1 border border-hairline rounded-lg p-lg space-y-md">
+          <div className="space-y-xxs">
+            <h4 className="text-body font-semibold text-ink">Need a different amount?</h4>
+            <p className="text-body-sm text-ink-muted">
+              Request additional pay for {payRecords[0].period_label || currentMonthLabel()} (extra coverage, overtime, a promised bonus). An admin reviews every request.
+            </p>
+          </div>
+          <button
+            onClick={() => openRequestModal(payRecords[0])}
+            className="inline-flex items-center justify-center bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-medium px-md py-1.5 rounded-md text-button transition-colors cursor-pointer"
+          >
+            Request Change
+          </button>
+        </div>
+      )}
+
       {/* Admin: Needs Review Panel */}
       {isAdmin && adminPendingRequests && adminPendingRequests.length > 0 && (
         <div className="space-y-md">

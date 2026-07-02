@@ -72,7 +72,7 @@ export default function ScheduleManager({
   isAdmin,
 }: ScheduleManagerProps) {
   const [currentDate, setCurrentDate] = useState(() => new Date())
-  const [viewMode, setViewMode] = useState<'week' | 'day'>('week')
+  const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month')
   const [isPending, startTransition] = useTransition()
 
   // Modal states
@@ -86,9 +86,9 @@ export default function ScheduleManager({
   const [label, setLabel] = useState('Chat Coverage')
   const [color, setColor] = useState('#5e6ad2')
   const [startDate, setStartDate] = useState('')
-  const [startTime, setStartTime] = useState('00:00')
+  const [startTime, setStartTime] = useState('09:00')
   const [endDate, setEndDate] = useState('')
-  const [endTime, setEndTime] = useState('08:00')
+  const [endTime, setEndTime] = useState('17:00')
 
   // Helpers to calculate start/end range of current view
   const getWeekRange = (date: Date) => {
@@ -117,12 +117,43 @@ export default function ScheduleManager({
 
   const { startOfDay, endOfDay } = getDayRange(currentDate)
 
+  const getMonthDays = (date: Date) => {
+    const year = date.getFullYear()
+    const month = date.getMonth()
+    const firstDayOfMonth = new Date(year, month, 1)
+    const dayOfWeek = firstDayOfMonth.getDay()
+    const startPadding = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+    const startGridDate = new Date(firstDayOfMonth)
+    startGridDate.setDate(firstDayOfMonth.getDate() - startPadding)
+    return Array.from({ length: 42 }, (_, i) => {
+      const d = new Date(startGridDate)
+      d.setDate(startGridDate.getDate() + i)
+      return d
+    })
+  }
+
   // Filter entries in view range
   const entriesInView = initialEntries.filter((entry) => {
     const entryStart = new Date(entry.start_time).getTime()
-    const rangeStart = (viewMode === 'week' ? startOfWeek : startOfDay).getTime()
-    const rangeEnd = (viewMode === 'week' ? endOfWeek : endOfDay).getTime()
+    let rangeStart, rangeEnd
+    if (viewMode === 'month') {
+      const days = getMonthDays(currentDate)
+      rangeStart = new Date(days[0]).setHours(0, 0, 0, 0)
+      rangeEnd = new Date(days[41]).setHours(23, 59, 59, 999)
+    } else if (viewMode === 'week') {
+      rangeStart = startOfWeek.getTime()
+      rangeEnd = endOfWeek.getTime()
+    } else {
+      rangeStart = startOfDay.getTime()
+      rangeEnd = endOfDay.getTime()
+    }
     return entryStart >= rangeStart && entryStart <= rangeEnd
+  })
+
+  // Filter shifts specifically for the currently selected date (for list view)
+  const shiftsForSelectedDate = initialEntries.filter((entry) => {
+    const entryDate = new Date(entry.start_time)
+    return entryDate.toDateString() === currentDate.toDateString()
   })
 
   // Check if current logged-in user has assignments in current view
@@ -130,7 +161,12 @@ export default function ScheduleManager({
 
   // Get range display text
   const getRangeLabel = () => {
-    if (viewMode === 'day') {
+    if (viewMode === 'month') {
+      return currentDate.toLocaleDateString('en-US', {
+        month: 'long',
+        year: 'numeric',
+      })
+    } else if (viewMode === 'day') {
       return currentDate.toLocaleDateString('en-US', {
         weekday: 'short',
         month: 'short',
@@ -149,7 +185,9 @@ export default function ScheduleManager({
   // Navigation handlers
   const handlePrev = () => {
     const d = new Date(currentDate)
-    if (viewMode === 'week') {
+    if (viewMode === 'month') {
+      d.setMonth(d.getMonth() - 1)
+    } else if (viewMode === 'week') {
       d.setDate(d.getDate() - 7)
     } else {
       d.setDate(d.getDate() - 1)
@@ -159,7 +197,9 @@ export default function ScheduleManager({
 
   const handleNext = () => {
     const d = new Date(currentDate)
-    if (viewMode === 'week') {
+    if (viewMode === 'month') {
+      d.setMonth(d.getMonth() + 1)
+    } else if (viewMode === 'week') {
       d.setDate(d.getDate() + 7)
     } else {
       d.setDate(d.getDate() + 1)
@@ -330,12 +370,20 @@ export default function ScheduleManager({
             {/* View Toggles */}
             <div className="flex flex-1 sm:flex-none bg-surface-1 p-xxs border border-hairline rounded-md">
               <button
+                onClick={() => setViewMode('month')}
+                className={`flex-1 sm:flex-initial text-center px-sm py-1.5 rounded-sm text-caption font-medium transition-colors cursor-pointer ${
+                  viewMode === 'month' ? 'bg-surface-3 text-ink' : 'text-ink-subtle hover:text-ink'
+                }`}
+              >
+                Month
+              </button>
+              <button
                 onClick={() => setViewMode('week')}
                 className={`flex-1 sm:flex-initial text-center px-sm py-1.5 rounded-sm text-caption font-medium transition-colors cursor-pointer ${
                   viewMode === 'week' ? 'bg-surface-3 text-ink' : 'text-ink-subtle hover:text-ink'
                 }`}
               >
-                Week View
+                Week
               </button>
               <button
                 onClick={() => setViewMode('day')}
@@ -343,7 +391,7 @@ export default function ScheduleManager({
                   viewMode === 'day' ? 'bg-surface-3 text-ink' : 'text-ink-subtle hover:text-ink'
                 }`}
               >
-                Day View
+                Day
               </button>
             </div>
 
@@ -413,71 +461,164 @@ export default function ScheduleManager({
       )}
 
       {/* Calendar Grid View */}
-      {viewMode === 'week' ? (
-        <div className="gap-sm grid grid-cols-1 md:grid-cols-7">
-          {weekDays.map((day, idx) => {
-            const shifts = getShiftsForDay(day)
-            const isToday = day.toDateString() === new Date().toDateString()
-            return (
-              <div
-                key={idx}
-                className={`bg-surface-1 border rounded-lg p-sm min-h-[160px] flex flex-col space-y-sm transition-colors ${
-                  isToday ? 'border-primary/45' : 'border-hairline'
-                }`}
-              >
-                {/* Day Header */}
-                <div className="flex justify-between items-baseline pb-xxs border-hairline border-b">
-                  <span className={`text-caption font-semibold uppercase tracking-wider ${isToday ? 'text-primary' : 'text-ink-subtle'}`}>
-                    {day.toLocaleDateString('en-US', { weekday: 'short' })}
-                  </span>
-                  <span className={`text-body font-mono ${isToday ? 'text-ink' : 'text-ink-subtle'}`}>
-                    {day.getDate()}
-                  </span>
-                </div>
-
-                {/* Day Shifts */}
-                <div className="flex flex-col flex-1 gap-xxs overflow-y-auto">
-                  {shifts.length > 0 ? (
-                    shifts.map((shift) => {
-                      const isCurrentUser = shift.user_id === currentUser.id
-                      return (
-                        <div
-                          key={shift.id}
-                          onClick={() => isAdmin && openEditModal(shift)}
-                          style={{ borderColor: shift.color || '#5e6ad2' }}
-                          className={`p-xs rounded-sm border-l-4 bg-surface-2 text-left space-y-xxs transition-colors text-caption ${
-                            isAdmin ? 'hover:bg-surface-3 cursor-pointer' : ''
-                          } ${isCurrentUser ? 'outline-1 outline-primary/40 ring-1 ring-primary/40' : ''}`}
-                        >
-                          <div className="flex justify-between items-center gap-xxs">
-                            <span className="font-semibold text-ink truncate">
-                              {getUserName(shift.user_id)}
-                            </span>
-                            {isCurrentUser && (
-                              <span className="bg-primary/20 px-1 rounded-sm text-[10px] text-primary">
-                                You
-                              </span>
-                            )}
-                          </div>
-                          <p className="font-medium text-[11px] text-ink-muted leading-tight">
-                            {shift.label || 'Coverage'}
-                          </p>
-                          <p className="font-mono text-[10px] text-ink-subtle">
-                            {formatTimeRange(shift.start_time, shift.end_time)}
-                          </p>
-                        </div>
-                      )
-                    })
-                  ) : (
-                    <span className="mt-sm text-[11px] text-ink-tertiary text-center italic">No coverage</span>
-                  )}
-                </div>
+      {viewMode === 'month' && (
+        <div className="border border-hairline rounded-lg bg-surface-1 overflow-hidden">
+          {/* Days of week header */}
+          <div className="grid grid-cols-7 bg-surface-2 border-b border-hairline">
+            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((dayName) => (
+              <div key={dayName} className="text-center py-xs text-caption font-semibold text-ink-subtle uppercase tracking-wider">
+                {dayName}
               </div>
-            )
-          })}
+            ))}
+          </div>
+
+          {/* Month grid days */}
+          <div className="grid grid-cols-7 bg-hairline gap-[1px]">
+            {getMonthDays(currentDate).map((day, idx) => {
+              const shifts = getShiftsForDay(day)
+              const isToday = day.toDateString() === new Date().toDateString()
+              const isSelected = day.toDateString() === currentDate.toDateString()
+              const isCurrentMonth = day.getMonth() === currentDate.getMonth()
+
+              return (
+                <div
+                  key={idx}
+                  onClick={() => {
+                    setCurrentDate(day)
+                  }}
+                  className={`min-h-[60px] md:min-h-[120px] p-1.5 md:p-sm bg-surface-1 flex flex-col justify-between transition-colors cursor-pointer select-none ${
+                    isCurrentMonth ? '' : 'opacity-40'
+                  } ${
+                    isSelected ? 'bg-surface-2 ring-1 ring-primary/30' : 'hover:bg-surface-2'
+                  }`}
+                >
+                  {/* Cell Header */}
+                  <div className="flex justify-end items-center">
+                    <span className={`h-5 w-5 flex items-center justify-center text-xs md:text-sm font-mono rounded-full ${
+                      isToday ? 'bg-primary text-primary-foreground font-semibold' : 'text-ink'
+                    }`}>
+                      {day.getDate()}
+                    </span>
+                  </div>
+
+                  {/* Cell Shifts - Desktop only */}
+                  <div className="hidden md:flex flex-col gap-xxs mt-xs overflow-y-auto max-h-[80px]">
+                    {shifts.slice(0, 3).map((shift) => (
+                      <div
+                        key={shift.id}
+                        onClick={(e) => {
+                          if (isAdmin) {
+                            e.stopPropagation()
+                            openEditModal(shift)
+                          }
+                        }}
+                        style={{ borderLeftColor: shift.color || '#5e6ad2' }}
+                        className="text-[9px] leading-tight p-xxs border-l-2 bg-surface-2 text-ink rounded-sm truncate"
+                      >
+                        <span className="font-semibold">{getUserName(shift.user_id)}</span> {shift.label || 'Coverage'}
+                      </div>
+                    ))}
+                    {shifts.length > 3 && (
+                      <span className="text-[8px] text-ink-subtle font-semibold pl-xxs">
+                        +{shifts.length - 3} more
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Indicator Dots - Mobile only */}
+                  <div className="flex md:hidden flex-wrap gap-[2px] mt-xs">
+                    {shifts.map((shift) => (
+                      <span
+                        key={shift.id}
+                        className="h-1.5 w-1.5 rounded-full shrink-0"
+                        style={{ backgroundColor: shift.color || '#5e6ad2' }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
-      ) : (
-        /* Day View list layout */
+      )}
+
+      {viewMode === 'week' && (
+        <div className="border border-hairline rounded-lg bg-surface-1 overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-7 bg-hairline gap-[1px]">
+            {weekDays.map((day, idx) => {
+              const shifts = getShiftsForDay(day)
+              const isToday = day.toDateString() === new Date().toDateString()
+              const isSelected = day.toDateString() === currentDate.toDateString()
+              return (
+                <div
+                  key={idx}
+                  onClick={() => setCurrentDate(day)}
+                  className={`bg-surface-1 p-sm min-h-[160px] flex flex-col space-y-sm transition-colors cursor-pointer ${
+                    isSelected ? 'bg-surface-2 ring-1 ring-primary/30' : 'hover:bg-surface-2'
+                  }`}
+                >
+                  {/* Day Header */}
+                  <div className="flex justify-between items-baseline pb-xxs border-hairline border-b">
+                    <span className={`text-caption font-semibold uppercase tracking-wider ${isToday ? 'text-primary' : 'text-ink-subtle'}`}>
+                      {day.toLocaleDateString('en-US', { weekday: 'short' })}
+                    </span>
+                    <span className={`h-5 w-5 flex items-center justify-center text-body font-mono rounded-full ${
+                      isToday ? 'bg-primary text-primary-foreground font-semibold' : 'text-ink-subtle'
+                    }`}>
+                      {day.getDate()}
+                    </span>
+                  </div>
+
+                  {/* Day Shifts */}
+                  <div className="flex flex-col flex-1 gap-xxs overflow-y-auto">
+                    {shifts.length > 0 ? (
+                      shifts.map((shift) => {
+                        const isCurrentUser = shift.user_id === currentUser.id
+                        return (
+                          <div
+                            key={shift.id}
+                            onClick={(e) => {
+                              if (isAdmin) {
+                                e.stopPropagation()
+                                openEditModal(shift)
+                              }
+                            }}
+                            style={{ borderColor: shift.color || '#5e6ad2' }}
+                            className={`p-xs rounded-sm border-l-4 bg-surface-2 text-left space-y-xxs transition-colors text-caption ${
+                              isAdmin ? 'hover:bg-surface-3 cursor-pointer' : ''
+                            } ${isCurrentUser ? 'outline-1 outline-primary/40 ring-1 ring-primary/40' : ''}`}
+                          >
+                            <div className="flex justify-between items-center gap-xxs">
+                              <span className="font-semibold text-ink truncate">
+                                {getUserName(shift.user_id)}
+                              </span>
+                              {isCurrentUser && (
+                                <span className="bg-primary/20 px-1 rounded-sm text-[10px] text-primary">
+                                  You
+                                </span>
+                              )}
+                            </div>
+                            <p className="font-medium text-[11px] text-ink-muted leading-tight">
+                              {shift.label || 'Coverage'}
+                            </p>
+                            <p className="font-mono text-[10px] text-ink-subtle">
+                              {formatTimeRange(shift.start_time, shift.end_time)}
+                            </p>
+                          </div>
+                        )
+                      })
+                    ) : (
+                      <span className="mt-sm text-[11px] text-ink-tertiary text-center italic">No coverage</span>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {viewMode === 'day' && (
         <div className="space-y-sm bg-surface-1 p-lg border border-hairline rounded-lg">
           <h3 className="pb-xs border-hairline border-b font-semibold text-body text-ink">
             Assignments for {getRangeLabel()}
@@ -521,6 +662,57 @@ export default function ScheduleManager({
             ) : (
               <p className="py-lg text-body-sm text-ink-subtle text-center italic">
                 No assignments scheduled for today.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Daily schedule drawer details listed below calendar in Month View */}
+      {viewMode === 'month' && (
+        <div className="space-y-sm bg-surface-1 p-lg border border-hairline rounded-lg">
+          <h3 className="pb-xs border-hairline border-b font-semibold text-body text-ink">
+            Assignments for {currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+          </h3>
+          
+          <div className="divide-y divide-hairline">
+            {shiftsForSelectedDate.length > 0 ? (
+              shiftsForSelectedDate.map((shift) => {
+                const isCurrentUser = shift.user_id === currentUser.id
+                return (
+                  <div
+                    key={shift.id}
+                    onClick={() => isAdmin && openEditModal(shift)}
+                    className={`flex items-center justify-between py-sm transition-colors ${
+                      isAdmin ? 'hover:bg-surface-2 cursor-pointer px-sm -mx-sm rounded-md' : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-sm">
+                      <span className="rounded-full w-3 h-3 shrink-0" style={{ backgroundColor: shift.color || '#5e6ad2' }} />
+                      <div>
+                        <div className="flex items-center gap-xs">
+                          <p className="font-semibold text-body-sm text-ink">
+                            {getUserName(shift.user_id)}
+                          </p>
+                          {isCurrentUser && (
+                            <span className="bg-primary/20 px-1 rounded-sm text-[10px] text-primary">
+                              You
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-caption text-ink-muted">{shift.label || 'Coverage'}</p>
+                      </div>
+                    </div>
+
+                    <p className="font-mono text-body-sm text-ink-muted">
+                      {formatTimeRange(shift.start_time, shift.end_time)}
+                    </p>
+                  </div>
+                )
+              })
+            ) : (
+              <p className="py-lg text-body-sm text-ink-subtle text-center italic">
+                No assignments scheduled for this day.
               </p>
             )}
           </div>

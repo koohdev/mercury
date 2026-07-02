@@ -72,6 +72,77 @@ interface AdminUsersClientProps {
   users: UserProfile[]
 }
 
+interface PayRateCellProps {
+  user: UserProfile
+  isEditing: boolean
+  onStartEdit: () => void
+  onCancel: () => void
+  onSave: (rate: number) => Promise<void>
+  isPending: boolean
+}
+
+function PayRateCell({
+  user,
+  isEditing,
+  onStartEdit,
+  onCancel,
+  onSave,
+  isPending,
+}: PayRateCellProps) {
+  const [val, setVal] = React.useState(String(user.pay_rate))
+
+  React.useEffect(() => {
+    if (isEditing) {
+      setVal(String(user.pay_rate))
+    }
+  }, [isEditing, user.pay_rate])
+
+  if (isEditing) {
+    return (
+      <div className="flex items-center gap-xs" onClick={(e) => e.stopPropagation()}>
+        <span className="text-ink-subtle text-sm">$</span>
+        <input
+          type="number"
+          step="0.01"
+          min="0"
+          value={val}
+          onChange={(e) => setVal(e.target.value)}
+          className="w-20 bg-surface-2 text-ink text-sm px-xs py-0.5 rounded-md border border-hairline focus:outline-2 focus:outline-primary-focus"
+          autoFocus
+        />
+        <button
+          onClick={async () => {
+            const rate = parseFloat(val)
+            if (!isNaN(rate) && rate >= 0) {
+              await onSave(rate)
+            }
+          }}
+          disabled={isPending}
+          className="p-1 bg-primary/10 hover:bg-primary/20 text-primary rounded cursor-pointer disabled:opacity-50"
+        >
+          <Check className="h-3.5 w-3.5" />
+        </button>
+        <button
+          onClick={onCancel}
+          className="p-1 hover:bg-surface-2 text-ink-subtle rounded cursor-pointer"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <button
+      onClick={onStartEdit}
+      className="flex items-center gap-1 text-sm text-ink-muted hover:text-ink cursor-pointer"
+    >
+      <Edit2 className="h-3 w-3" />
+      ${Number(user.pay_rate).toFixed(2)}
+    </button>
+  )
+}
+
 export default function AdminUsersClient({ users: initialUsers }: AdminUsersClientProps) {
   const [data, setData] = React.useState(() => initialUsers)
   const [isPending, startTransition] = React.useTransition()
@@ -79,7 +150,6 @@ export default function AdminUsersClient({ users: initialUsers }: AdminUsersClie
   const [error, setError] = React.useState<string | null>(null)
   const [globalSearch, setGlobalSearch] = React.useState('')
   const [editPayRateId, setEditPayRateId] = React.useState<string | null>(null)
-  const [editPayRateValue, setEditPayRateValue] = React.useState('')
 
   // Create form state
   const [newEmail, setNewEmail] = React.useState('')
@@ -115,16 +185,6 @@ export default function AdminUsersClient({ users: initialUsers }: AdminUsersClie
     startTransition(async () => {
       const res = await toggleUserStatus(userId, currentStatus)
       if (res?.error) setError(res.error)
-    })
-  }
-
-  const handleSavePayRate = (userId: string) => {
-    const rate = parseFloat(editPayRateValue)
-    if (isNaN(rate) || rate < 0) { setError('Invalid pay rate.'); return }
-    startTransition(async () => {
-      const res = await updateUserPayRate(userId, rate)
-      if (res?.error) setError(res.error)
-      else setEditPayRateId(null)
     })
   }
 
@@ -237,35 +297,21 @@ export default function AdminUsersClient({ users: initialUsers }: AdminUsersClie
         header: 'Monthly Pay',
         cell: ({ row }) => {
           const user = row.original
-          if (editPayRateId === user.id) {
-            return (
-              <div className="flex items-center gap-xs" onClick={(e) => e.stopPropagation()}>
-                <span className="text-ink-subtle text-sm">$</span>
-                <input
-                  type="number" step="0.01" min="0"
-                  value={editPayRateValue}
-                  onChange={(e) => setEditPayRateValue(e.target.value)}
-                  className="w-20 bg-surface-2 text-ink text-sm px-xs py-0.5 rounded-md border border-hairline focus:outline-2 focus:outline-primary-focus"
-                />
-                <button onClick={() => handleSavePayRate(user.id)} disabled={isPending}
-                  className="p-1 bg-primary/10 hover:bg-primary/20 text-primary rounded cursor-pointer disabled:opacity-50">
-                  <Check className="h-3.5 w-3.5" />
-                </button>
-                <button onClick={() => setEditPayRateId(null)}
-                  className="p-1 hover:bg-surface-2 text-ink-subtle rounded cursor-pointer">
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            )
-          }
           return (
-            <button
-              onClick={() => { setEditPayRateId(user.id); setEditPayRateValue(String(user.pay_rate)) }}
-              className="flex items-center gap-1 text-sm text-ink-muted hover:text-ink cursor-pointer"
-            >
-              <Edit2 className="h-3 w-3" />
-              ${Number(user.pay_rate).toFixed(2)}
-            </button>
+            <PayRateCell
+              user={user}
+              isEditing={editPayRateId === user.id}
+              onStartEdit={() => setEditPayRateId(user.id)}
+              onCancel={() => setEditPayRateId(null)}
+              onSave={async (rate) => {
+                startTransition(async () => {
+                  const res = await updateUserPayRate(user.id, rate)
+                  if (res?.error) setError(res.error)
+                  else setEditPayRateId(null)
+                })
+              }}
+              isPending={isPending}
+            />
           )
         },
       },
@@ -308,7 +354,7 @@ export default function AdminUsersClient({ users: initialUsers }: AdminUsersClie
         },
       },
     ],
-    [editPayRateId, editPayRateValue, isPending, handleSavePayRate, handleToggleStatus]
+    [editPayRateId, isPending, handleToggleStatus]
   )
 
   const table = useReactTable({

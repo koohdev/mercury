@@ -88,7 +88,7 @@ export default function Sidebar({ isAdmin }: SidebarProps) {
       >
         <div className="flex h-16 items-center px-lg border-b border-hairline">
           <Link href="/dashboard" className="text-card-title font-semibold tracking-card-title text-ink">
-            Clocky
+            Mercury Marketing
           </Link>
         </div>
 

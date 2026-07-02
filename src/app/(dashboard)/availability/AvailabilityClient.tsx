@@ -107,7 +107,7 @@ export default function AvailabilityClient({
   }
 
   return (
-    <div className="space-y-lg max-w-2xl">
+    <div className="space-y-lg w-full">
       {/* Timezone notice */}
       <div className="flex items-start gap-sm bg-surface-1 p-sm border border-hairline rounded-lg text-body-sm text-ink-muted">
         <Globe className="mt-0.5 w-4 h-4 text-ink-subtle shrink-0" />
@@ -135,7 +135,7 @@ export default function AvailabilityClient({
               className={`flex flex-col sm:flex-row sm:items-center gap-sm p-md rounded-lg border transition-all duration-150 ${
                 day.isAvailable
                   ? 'bg-surface-1 border-hairline-strong'
-                  : 'bg-surface-1 border-hairline opacity-60'
+                  : 'bg-surface-1 border-hairline opacity-50'
               }`}
             >
               {/* Checkbox + Day Name */}
@@ -156,41 +156,39 @@ export default function AvailabilityClient({
               </label>
 
               {/* Time Inputs */}
-              {day.isAvailable ? (
-                <div className="flex flex-1 items-center gap-sm">
-                  <div className="flex flex-1 items-center gap-xs">
-                    <Clock className="w-4 h-4 text-ink-subtle shrink-0" />
-                    <input
-                      type="time"
-                      value={day.startTime}
-                      onChange={(e) => updateTime(idx, 'startTime', e.target.value)}
-                      className="flex-1 bg-surface-2 px-sm py-1.5 border border-hairline rounded-md focus:outline-2 focus:outline-primary-focus min-w-0 text-body-sm text-ink"
-                    />
-                  </div>
-                  <span className="font-medium text-body-sm text-ink-subtle shrink-0">to</span>
-                  <div className="flex-1">
-                    <input
-                      type="time"
-                      value={day.endTime}
-                      onChange={(e) => updateTime(idx, 'endTime', e.target.value)}
-                      className="bg-surface-2 px-sm py-1.5 border border-hairline rounded-md focus:outline-2 focus:outline-primary-focus w-full text-body-sm text-ink"
-                    />
-                  </div>
+              <div className={`flex flex-1 items-center gap-sm transition-opacity duration-150 ${day.isAvailable ? '' : 'opacity-40 pointer-events-none'}`}>
+                <div className="flex flex-1 items-center gap-xs">
+                  <Clock className="w-4 h-4 text-ink-subtle shrink-0" />
+                  <input
+                    type="time"
+                    disabled={!day.isAvailable}
+                    value={day.startTime}
+                    onChange={(e) => updateTime(idx, 'startTime', e.target.value)}
+                    className="flex-1 bg-surface-2 px-sm py-1.5 border border-hairline rounded-md focus:outline-2 focus:outline-primary-focus min-w-0 text-body-sm text-ink disabled:cursor-not-allowed"
+                  />
                 </div>
-              ) : (
-                <span className="sm:flex-1 text-body-sm text-ink-tertiary italic">Not available</span>
-              )}
+                <span className="font-medium text-body-sm text-ink-subtle shrink-0">to</span>
+                <div className="flex-1">
+                  <input
+                    type="time"
+                    disabled={!day.isAvailable}
+                    value={day.endTime}
+                    onChange={(e) => updateTime(idx, 'endTime', e.target.value)}
+                    className="bg-surface-2 px-sm py-1.5 border border-hairline rounded-md focus:outline-2 focus:outline-primary-focus w-full text-body-sm text-ink disabled:cursor-not-allowed"
+                  />
+                </div>
+              </div>
             </div>
           )
         })}
       </div>
 
       {/* Save Button */}
-      <div className="flex items-center gap-sm pt-md border-hairline border-t">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-sm pt-md border-hairline border-t">
         <button
           onClick={handleSave}
           disabled={isPending}
-          className="inline-flex items-center gap-xs bg-primary hover:bg-primary-hover active:bg-primary-focus disabled:opacity-50 shadow-md px-lg py-2 rounded-md font-medium text-button text-primary-foreground transition-colors duration-150 cursor-pointer"
+          className="inline-flex items-center justify-center gap-xs bg-primary hover:bg-primary-hover active:bg-primary-focus disabled:opacity-50 shadow-md px-lg py-2 rounded-md font-medium text-button text-primary-foreground transition-colors duration-150 cursor-pointer w-full sm:w-auto"
         >
           {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
           Update Availability
