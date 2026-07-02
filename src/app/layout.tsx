@@ -23,6 +23,7 @@ export const metadata: Metadata = {
   }
 }
 
+// Trigger Vercel rebuild
 export const viewport = {
   themeColor: '#0A0A0A',
 }
