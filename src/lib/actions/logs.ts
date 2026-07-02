@@ -1,12 +1,9 @@
 'use server'
 
-import { createServerClient, getAuthUser } from '@/lib/supabase/server'
+import { createServerClient, getAuthUser, getAdminClient } from '@/lib/supabase/server'
 
 export async function getModeratorProfiles() {
-  const { data: { user } } = await getAuthUser()
-  if (!user || user.app_metadata?.role !== 'admin') {
-    throw new Error('Unauthorized')
-  }
+  await getAdminClient() // auth check
 
   const supabase = await createServerClient()
   const { data, error } = await supabase
@@ -50,10 +47,7 @@ export async function getShiftsForUser(userId?: string) {
 }
 
 export async function getAllShifts(userIdFilter?: string) {
-  const { data: { user } } = await getAuthUser()
-  if (!user || user.app_metadata?.role !== 'admin') {
-    throw new Error('Unauthorized')
-  }
+  await getAdminClient() // auth check
 
   const supabase = await createServerClient()
   let query = supabase
@@ -72,7 +66,7 @@ export async function getAllShifts(userIdFilter?: string) {
     return []
   }
 
-  return (data || []).map((shift: any) => ({
+  return (data || []).map((shift) => ({
     ...shift,
     profiles: Array.isArray(shift.profiles) ? shift.profiles[0] : shift.profiles
   }))

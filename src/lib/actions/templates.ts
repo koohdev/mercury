@@ -1,6 +1,6 @@
 'use server'
 
-import { createServerClient } from '@/lib/supabase/server'
+import { getAdminClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -13,12 +13,7 @@ const TemplateSchema = z.object({
 })
 
 export async function createCategory(name: string) {
-  const supabase = await createServerClient() as any
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user || user.app_metadata?.role !== 'admin') {
-    throw new Error('Unauthorized')
-  }
+  const { supabase } = await getAdminClient()
 
   if (!name.trim()) {
     return { error: 'Category name is required' }
@@ -35,13 +30,7 @@ export async function createCategory(name: string) {
 }
 
 export async function createTemplate(rawInput: unknown) {
-  const supabase = await createServerClient() as any
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user || user.app_metadata?.role !== 'admin') {
-    throw new Error('Unauthorized')
-  }
-
+  const { supabase } = await getAdminClient()
   const validated = TemplateSchema.parse(rawInput)
 
   const { error } = await supabase.from('response_templates').insert({
@@ -58,13 +47,7 @@ export async function createTemplate(rawInput: unknown) {
 }
 
 export async function updateTemplate(id: string, rawInput: unknown) {
-  const supabase = await createServerClient() as any
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user || user.app_metadata?.role !== 'admin') {
-    throw new Error('Unauthorized')
-  }
-
+  const { supabase } = await getAdminClient()
   const validated = TemplateSchema.parse(rawInput)
 
   const { error } = await supabase
@@ -84,12 +67,7 @@ export async function updateTemplate(id: string, rawInput: unknown) {
 }
 
 export async function deleteTemplate(id: string) {
-  const supabase = await createServerClient() as any
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user || user.app_metadata?.role !== 'admin') {
-    throw new Error('Unauthorized')
-  }
+  const { supabase } = await getAdminClient()
 
   const { error } = await supabase
     .from('response_templates')
@@ -103,12 +81,7 @@ export async function deleteTemplate(id: string) {
 }
 
 export async function deleteCategory(id: string) {
-  const supabase = await createServerClient() as any
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user || user.app_metadata?.role !== 'admin') {
-    throw new Error('Unauthorized')
-  }
+  const { supabase } = await getAdminClient()
 
   const { error } = await supabase
     .from('template_categories')

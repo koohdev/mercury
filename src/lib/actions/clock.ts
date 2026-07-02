@@ -1,12 +1,10 @@
 'use server'
 
-import { createServerClient } from '@/lib/supabase/server'
+import { getAuthedClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
 export async function clockIn() {
-  const supabase = await createServerClient() as any
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthenticated')
+  const { supabase, user } = await getAuthedClient()
 
   const { error } = await supabase.from('shifts').insert({
     user_id: user.id,
@@ -22,9 +20,7 @@ export async function clockIn() {
 }
 
 export async function startBreak(shiftId: string) {
-  const supabase = await createServerClient() as any
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthenticated')
+  const { supabase, user } = await getAuthedClient()
 
   // 1. Update shift status to 'on_break'
   const { error: shiftError } = await supabase
@@ -47,9 +43,7 @@ export async function startBreak(shiftId: string) {
 }
 
 export async function endBreak(shiftId: string) {
-  const supabase = await createServerClient() as any
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthenticated')
+  const { supabase, user } = await getAuthedClient()
 
   // 1. Find active break
   const { data: activeBreaks, error: fetchError } = await supabase
@@ -87,9 +81,7 @@ export async function clockOut(shiftId: string, summary: string) {
     return { error: 'Shift summary is mandatory.' }
   }
 
-  const supabase = await createServerClient() as any
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthenticated')
+  const { supabase, user } = await getAuthedClient()
 
   // 1. If currently on break, end the break first
   const { data: activeBreaks } = await supabase
@@ -123,9 +115,7 @@ export async function clockOut(shiftId: string, summary: string) {
 }
 
 export async function updateShiftSummary(shiftId: string, summary: string) {
-  const supabase = await createServerClient() as any
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error("Unauthenticated")
+  const { supabase, user } = await getAuthedClient()
 
   const { error } = await supabase
     .from("shifts")

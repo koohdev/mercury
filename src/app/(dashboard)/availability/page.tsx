@@ -22,7 +22,7 @@ export default async function AvailabilityPage() {
       .from('profiles')
       .select('timezone')
       .eq('id', user.id)
-      .single() as any,
+      .single(),
     supabase
       .from('availability')
       .select('*')

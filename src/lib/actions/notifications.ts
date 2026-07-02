@@ -1,15 +1,13 @@
 'use server'
 
-import { createServerClient } from '@/lib/supabase/server'
+import { getAuthedClient, getAdminClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 
 export async function markAsRead(notificationId: string) {
-  const supabase = await createServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthenticated')
+  const { supabase, user } = await getAuthedClient()
 
-  await (supabase as any)
+  await supabase
     .from('notifications')
     .update({ is_read: true })
     .eq('id', notificationId)
@@ -19,11 +17,9 @@ export async function markAsRead(notificationId: string) {
 }
 
 export async function markAllRead() {
-  const supabase = await createServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthenticated')
+  const { supabase, user } = await getAuthedClient()
 
-  await (supabase as any)
+  await supabase
     .from('notifications')
     .update({ is_read: true })
     .eq('user_id', user.id)
@@ -33,20 +29,17 @@ export async function markAllRead() {
 }
 
 export async function sendAnnouncement(userIds: string[], title: string, message: string) {
-  const supabase = await createServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user || user.app_metadata?.role !== 'admin') throw new Error('Unauthorized')
-
+  await getAdminClient() // auth check only
   const adminClient = createAdminClient()
 
   const rows = userIds.map((uid) => ({
     user_id: uid,
     title,
     message,
-    type: 'admin_announcement',
+    type: 'admin_announcement' as const,
   }))
 
-  const { error } = await (adminClient as any).from('notifications').insert(rows)
+  const { error } = await adminClient.from('notifications').insert(rows)
   if (error) return { error: error.message }
 
   revalidatePath('/')
@@ -61,7 +54,7 @@ export async function createSystemNotification(
 ) {
   const adminClient = createAdminClient()
 
-  await (adminClient as any).from('notifications').insert({
+  await adminClient.from('notifications').insert({
     user_id: userId,
     title,
     message,

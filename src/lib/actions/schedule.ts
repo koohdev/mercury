@@ -1,6 +1,6 @@
 'use server'
 
-import { createServerClient } from '@/lib/supabase/server'
+import { getAdminClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -13,12 +13,7 @@ const ScheduleSchema = z.object({
 })
 
 export async function createSchedule(rawInput: unknown) {
-  const supabase = await createServerClient() as any
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user || user.app_metadata?.role !== 'admin') {
-    throw new Error('Unauthorized')
-  }
-
+  const { supabase, user } = await getAdminClient()
   const validated = ScheduleSchema.parse(rawInput)
 
   const { error } = await supabase.from('schedule_entries').insert({
@@ -37,12 +32,7 @@ export async function createSchedule(rawInput: unknown) {
 }
 
 export async function updateSchedule(id: string, rawInput: unknown) {
-  const supabase = await createServerClient() as any
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user || user.app_metadata?.role !== 'admin') {
-    throw new Error('Unauthorized')
-  }
-
+  const { supabase } = await getAdminClient()
   const validated = ScheduleSchema.parse(rawInput)
 
   const { error } = await supabase
@@ -63,11 +53,7 @@ export async function updateSchedule(id: string, rawInput: unknown) {
 }
 
 export async function deleteSchedule(id: string) {
-  const supabase = await createServerClient() as any
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user || user.app_metadata?.role !== 'admin') {
-    throw new Error('Unauthorized')
-  }
+  const { supabase } = await getAdminClient()
 
   const { error } = await supabase.from('schedule_entries').delete().eq('id', id)
 

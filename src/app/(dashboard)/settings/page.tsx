@@ -12,7 +12,7 @@ export default async function SettingsPage() {
   if (!user) redirect('/login')
 
   const supabase = await createServerClient()
-  const { data: profile } = await (supabase as any)
+  const { data: profile } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', user.id)

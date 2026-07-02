@@ -9,7 +9,7 @@ export const metadata = {
 export default async function AdminUsersPage() {
   const supabase = await createServerClient()
 
-  const { data: users } = await (supabase as any)
+  const { data: users } = await supabase
     .from('profiles')
     .select('*')
     .order('created_at', { ascending: false })

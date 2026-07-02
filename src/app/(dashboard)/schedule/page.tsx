@@ -30,7 +30,7 @@ export default async function SchedulePage() {
       <ScheduleManager
         currentUser={user}
         profiles={profiles || []}
-        initialEntries={(entries || []) as any}
+        initialEntries={entries || []}
         isAdmin={isAdmin}
       />
     </div>

@@ -1,6 +1,6 @@
 'use server'
 
-import { createServerClient } from '@/lib/supabase/server'
+import { getAuthedClient, getAdminClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -11,10 +11,7 @@ const ChangeRequestSchema = z.object({
 })
 
 export async function submitPayChangeRequest(rawInput: unknown) {
-  const supabase = await createServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthenticated')
-
+  const { supabase, user } = await getAuthedClient()
   const validated = ChangeRequestSchema.parse(rawInput)
 
   const { error } = await supabase.from('pay_change_requests').insert({
@@ -22,7 +19,7 @@ export async function submitPayChangeRequest(rawInput: unknown) {
     pay_record_id: validated.payRecordId,
     requested_amount: validated.requestedAmount,
     reason: validated.reason,
-  } as any)
+  })
 
   if (error) return { error: error.message }
 
@@ -35,11 +32,9 @@ export async function resolvePayChangeRequest(
   decision: 'approved' | 'denied',
   adminNotes?: string
 ) {
-  const supabase = await createServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user || user.app_metadata?.role !== 'admin') throw new Error('Unauthorized')
+  const { supabase, user } = await getAdminClient()
 
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from('pay_change_requests')
     .update({
       status: decision,

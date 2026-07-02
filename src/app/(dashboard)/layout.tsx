@@ -34,7 +34,7 @@ export default async function DashboardLayout({
       .eq("status", "completed")
       .gte("clock_in", thirtyDaysAgo.toISOString())
       .order("clock_in", { ascending: false }),
-    (supabase as any)
+    supabase
       .from("notifications")
       .select("*")
       .eq("user_id", user.id)
@@ -49,7 +49,7 @@ export default async function DashboardLayout({
   ])
 
   const shifts = shiftsRes.data
-  const completedDates = (shifts || []).map((s: any) => s.clock_in)
+  const completedDates = (shifts || []).map((s) => s.clock_in)
   const streakCount = calculateStreak(completedDates)
 
   const notifications = notificationsRes.data
@@ -71,8 +71,8 @@ export default async function DashboardLayout({
           <SidebarInset className="relative flex flex-1 flex-col overflow-hidden bg-surface-1 sm:rounded-2xl rounded-none sm:m-4 m-0 sm:border border-0 border-hairline">
             {/* Subtle purple gradient background blobs scoped only to SidebarInset */}
             <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden rounded-none sm:rounded-2xl">
-              <div className="absolute -top-40 -left-40 w-[20rem] h-[20rem] bg-purple-500/[0.04] dark:bg-purple-600/[0.05] rounded-full blur-[120px]" />
-              <div className="absolute top-1/3 -right-40 w-[24rem] h-[24rem] bg-purple-500/[0.015] dark:bg-purple-700/[0.025] rounded-full blur-[140px]" />
+              <div className="absolute -top-40 -left-40 w-80 h-80 bg-purple-500/4 dark:bg-purple-600/5 rounded-full blur-[120px]" />
+              <div className="absolute top-1/3 -right-40 w-96 h-96 bg-purple-500/1.5 dark:bg-purple-700/2.5 rounded-full blur-[140px]" />
             </div>
 
             <div className="relative z-10 flex flex-col flex-1 overflow-hidden">

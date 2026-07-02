@@ -1,6 +1,6 @@
 'use server'
 
-import { createServerClient } from '@/lib/supabase/server'
+import { getAuthedClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { timeToUTC } from '@/lib/utils/timezone'
 
@@ -15,9 +15,7 @@ export async function saveAvailability(
   items: DayAvailability[],
   userTimezone: string
 ) {
-  const supabase = await createServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthenticated')
+  const { supabase, user } = await getAuthedClient()
 
   // Prepare upsert rows
   const upsertRows = items.map((item) => {
@@ -44,7 +42,7 @@ export async function saveAvailability(
   // Upsert availability rows
   const { error } = await supabase
     .from('availability')
-    .upsert(upsertRows as any, { onConflict: 'user_id,day_of_week' })
+    .upsert(upsertRows, { onConflict: 'user_id,day_of_week' })
 
   if (error) {
     console.error('Error saving availability:', error)

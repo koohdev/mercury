@@ -1,6 +1,6 @@
 'use server'
 
-import { createServerClient } from '@/lib/supabase/server'
+import { getAuthedClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -22,13 +22,10 @@ const PasswordSchema = z.object({
 })
 
 export async function saveProfile(rawInput: unknown) {
-  const supabase = await createServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthenticated')
-
+  const { supabase, user } = await getAuthedClient()
   const validated = ProfileSchema.parse(rawInput)
 
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from('profiles')
     .update(validated)
     .eq('id', user.id)
@@ -40,10 +37,7 @@ export async function saveProfile(rawInput: unknown) {
 }
 
 export async function updatePassword(rawInput: unknown) {
-  const supabase = await createServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthenticated')
-
+  const { supabase } = await getAuthedClient()
   const validated = PasswordSchema.parse(rawInput)
 
   const { error } = await supabase.auth.updateUser({

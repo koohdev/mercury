@@ -23,7 +23,7 @@ export default async function MyLogsPage() {
       .from('profiles')
       .select('timezone')
       .eq('id', user.id)
-      .single() as any,
+      .single(),
     getShiftsForUser(user.id)
   ])
 

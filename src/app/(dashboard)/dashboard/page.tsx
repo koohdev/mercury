@@ -64,11 +64,11 @@ export default async function DashboardPage() {
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-  const last30DaysCompletedShifts = (shifts as any[] || []).filter(
+  const last30DaysCompletedShifts = (shifts || []).filter(
     (s) => s.status === "completed" && new Date(s.clock_in) >= thirtyDaysAgo
   )
 
-  const payRate = Number((profile as any)?.pay_rate || 0)
+  const payRate = Number(profile?.pay_rate || 0)
 
   // Aggregated Stats
   const totalHours = last30DaysCompletedShifts.reduce((acc, s) => {
@@ -94,14 +94,14 @@ export default async function DashboardPage() {
           />
         </div>
         <div className="lg:col-span-1 order-1 lg:order-2">
-          <ClockWidget activeShift={activeShift as any} />
+          <ClockWidget activeShift={activeShift} />
         </div>
       </div>
 
       {/* Row 2: ChartAreaInteractive and PayWidget */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
         <div className="@container/main lg:col-span-2 flex flex-col">
-          <ChartAreaInteractive shiftsData={shifts as any[] || []} />
+          <ChartAreaInteractive shiftsData={shifts || []} />
         </div>
         <div className="lg:col-span-1 flex flex-col">
           <PayWidget monthlyRate={estimatedPay} />
@@ -114,7 +114,7 @@ export default async function DashboardPage() {
           <h3 className="text-lg font-semibold text-ink">Recent Shift Logs</h3>
           <p className="text-sm text-ink-muted mt-0.5">List of recent logged shifts and summaries</p>
         </div>
-        <DataTable data={shifts as any[] || []} />
+        <DataTable data={shifts || []} />
       </div>
     </div>
   )

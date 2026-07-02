@@ -52,6 +52,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       shifts: {
         Row: {
@@ -87,6 +88,15 @@ export interface Database {
           status?: 'active' | 'on_break' | 'completed'
           created_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "shifts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       breaks: {
         Row: {
@@ -107,6 +117,15 @@ export interface Database {
           start_time?: string
           end_time?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "breaks_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "shifts"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       schedule_entries: {
         Row: {
@@ -139,6 +158,15 @@ export interface Database {
           created_at?: string
           created_by?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_entries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       availability: {
         Row: {
@@ -155,8 +183,8 @@ export interface Database {
           user_id: string
           day_of_week: number
           is_available: boolean
-          start_time: string
-          end_time: string
+          start_time: string | null
+          end_time: string | null
           updated_at?: string
         }
         Update: {
@@ -168,6 +196,15 @@ export interface Database {
           end_time?: string
           updated_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "availability_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       template_categories: {
         Row: {
@@ -179,7 +216,7 @@ export interface Database {
         Insert: {
           id?: string
           name: string
-          sort_order: number
+          sort_order?: number
           created_at?: string
         }
         Update: {
@@ -188,6 +225,7 @@ export interface Database {
           sort_order?: number
           created_at?: string
         }
+        Relationships: []
       }
       response_templates: {
         Row: {
@@ -204,7 +242,7 @@ export interface Database {
           category_id: string
           title: string
           body: string
-          sort_order: number
+          sort_order?: number
           created_at?: string
           updated_at?: string
         }
@@ -217,6 +255,15 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "response_templates_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "template_categories"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       pay_records: {
         Row: {
@@ -252,6 +299,15 @@ export interface Database {
           created_at?: string
           created_by?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "pay_records_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       pay_change_requests: {
         Row: {
@@ -290,6 +346,22 @@ export interface Database {
           resolved_at?: string | null
           resolved_by?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "pay_change_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pay_change_requests_pay_record_id_fkey"
+            columns: ["pay_record_id"]
+            isOneToOne: false
+            referencedRelation: "pay_records"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       notifications: {
         Row: {
@@ -322,6 +394,78 @@ export interface Database {
           metadata?: Json | null
           created_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      campaigns: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          status: 'active' | 'completed' | 'paused'
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          status?: 'active' | 'completed' | 'paused'
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          status?: 'active' | 'completed' | 'paused'
+          created_at?: string
+        }
+        Relationships: []
+      }
+      campaign_assignments: {
+        Row: {
+          id: string
+          campaign_id: string
+          moderator_id: string
+          assigned_by: string | null
+          assigned_at: string
+        }
+        Insert: {
+          id?: string
+          campaign_id: string
+          moderator_id: string
+          assigned_by?: string | null
+          assigned_at?: string
+        }
+        Update: {
+          id?: string
+          campaign_id?: string
+          moderator_id?: string
+          assigned_by?: string | null
+          assigned_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_assignments_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_assignments_moderator_id_fkey"
+            columns: ["moderator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {

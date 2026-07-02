@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { useTimer } from '@/lib/hooks/useTimer'
+import { useTimer } from '@/hooks/useTimer'
 import { clockIn, clockOut, startBreak, endBreak } from '@/lib/actions/clock'
 import { Play, Square, Pause } from 'lucide-react'
 
@@ -9,7 +9,7 @@ interface ClockWidgetProps {
   activeShift: {
     id: string
     clock_in: string
-    status: 'active' | 'on_break'
+    status: 'active' | 'on_break' | 'completed'
     breaks?: { start_time: string; end_time: string | null }[]
   } | null
 }

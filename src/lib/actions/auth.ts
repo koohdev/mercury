@@ -25,11 +25,6 @@ export async function login(prevState: { error: string } | null | unknown, formD
   })
 
   if (error) {
-    console.error('SIGNIN ERROR:', error)
-    console.error('SIGNIN ERROR DETAILS:', JSON.stringify(error, Object.getOwnPropertyNames(error)))
-    if ('cause' in error) {
-      console.error('SIGNIN ERROR CAUSE:', error.cause)
-    }
     return { error: error.message || 'An unknown error occurred during sign in.' }
   }
 

@@ -73,13 +73,17 @@ function parseIntervalToHours(intervalStr: string | null): number {
 }
 
 export function ChartAreaInteractive({ shiftsData }: ChartAreaInteractiveProps) {
-  const isMobile = useIsMobile()
   const [timeRange, setTimeRange] = React.useState("30d")
+  const [mounted, setMounted] = React.useState(false)
 
-
+  React.useEffect(() => {
+    const timer = setTimeout(() => setMounted(true), 0)
+    return () => clearTimeout(timer)
+  }, [])
 
   // Generate dynamic chart data based on shiftsData
   const processedData = React.useMemo(() => {
+    if (!mounted) return []
     const daysCount = timeRange === "7d" ? 7 : 30
     const result: ChartDataPoint[] = []
 
@@ -110,7 +114,23 @@ export function ChartAreaInteractive({ shiftsData }: ChartAreaInteractiveProps) 
     }
 
     return result
-  }, [shiftsData, timeRange])
+  }, [shiftsData, timeRange, mounted])
+
+  if (!mounted) {
+    return (
+      <Card className="@container/card bg-surface-1 border border-hairline">
+        <CardHeader>
+          <CardTitle className="text-ink">Hours Worked & Break Trend</CardTitle>
+          <CardDescription className="text-ink-muted">
+            <span>Daily active work and break times</span>
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6 h-[250px] flex items-center justify-center">
+          <div className="text-ink-subtle text-body-sm">Loading trend data...</div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card className="@container/card bg-surface-1 border border-hairline">

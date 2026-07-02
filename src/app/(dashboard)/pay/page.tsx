@@ -20,7 +20,7 @@ export default async function PayPage() {
       .from('profiles')
       .select('legal_full_name, pay_rate')
       .eq('id', user.id)
-      .single() as any,
+      .single(),
     supabase
       .from('pay_records')
       .select('*')
@@ -36,7 +36,7 @@ export default async function PayPage() {
           .from('pay_change_requests')
           .select('*, profiles(legal_full_name, email), pay_records(period_label, amount)')
           .eq('status', 'pending')
-          .order('created_at', { ascending: true }) as any)
+          .order('created_at', { ascending: true }))
       : Promise.resolve({ data: null })
   ])
 

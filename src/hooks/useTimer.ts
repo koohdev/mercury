@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 
 interface BreakItem {
   start_time: string
@@ -10,7 +10,7 @@ export function useTimer(
   breaks: BreakItem[] = [],
   status: 'active' | 'on_break' | 'completed'
 ) {
-  const getElapsedSeconds = () => {
+  const getElapsedSeconds = useCallback(() => {
     if (!clockInTime || status === 'completed') {
       return 0
     }
@@ -30,19 +30,22 @@ export function useTimer(
 
     const elapsed = Math.max(0, now - clockInMs - breakMs)
     return Math.floor(elapsed / 1000)
-  }
+  }, [clockInTime, breaks, status])
 
   // ponytail: calculate initial value synchronously to avoid cascading renders warning in React
   const [seconds, setSeconds] = useState(getElapsedSeconds)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setMounted(true), 0)
+    return () => clearTimeout(timer)
+  }, [])
 
   useEffect(() => {
     if (!clockInTime || status === 'completed' || status === 'on_break') {
-      if (status === 'on_break') {
-        setSeconds(getElapsedSeconds())
-      } else {
-        setSeconds(0)
-      }
-      return
+      const elapsedVal = status === 'on_break' ? getElapsedSeconds() : 0
+      const timer = setTimeout(() => setSeconds(elapsedVal), 0)
+      return () => clearTimeout(timer)
     }
 
     const interval = setInterval(() => {
@@ -50,7 +53,7 @@ export function useTimer(
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [clockInTime, breaks, status])
+  }, [clockInTime, status, getElapsedSeconds])
 
   const formatTime = (totalSeconds: number) => {
     const hrs = Math.floor(totalSeconds / 3600)
@@ -63,5 +66,5 @@ export function useTimer(
     ].join(':')
   }
 
-  return { seconds, formatted: formatTime(seconds) }
+  return { seconds, formatted: mounted ? formatTime(seconds) : '00:00:00' }
 }

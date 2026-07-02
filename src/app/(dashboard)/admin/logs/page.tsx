@@ -28,7 +28,7 @@ export default async function AdminLogsPage() {
       .from('profiles')
       .select('timezone')
       .eq('id', user.id)
-      .single() as any,
+      .single(),
     getModeratorProfiles(),
     getAllShifts()
   ])

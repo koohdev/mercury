@@ -1,7 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
-import { createServerClient } from '@/lib/supabase/server'
+import { getAdminClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -13,15 +13,8 @@ const CreateUserSchema = z.object({
   pay_rate: z.number().min(0, 'Pay rate must be 0 or higher'),
 })
 
-async function assertAdmin() {
-  const supabase = await createServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user || user.app_metadata?.role !== 'admin') throw new Error('Unauthorized')
-  return user
-}
-
 export async function createUser(rawInput: unknown) {
-  await assertAdmin()
+  await getAdminClient() // auth check
   const validated = CreateUserSchema.parse(rawInput)
   const adminClient = createAdminClient()
 
@@ -37,7 +30,7 @@ export async function createUser(rawInput: unknown) {
   if (!authData.user) return { error: 'Failed to create user' }
 
   // 2. Create profile row
-  const { error: profileError } = await (adminClient as any)
+  const { error: profileError } = await adminClient
     .from('profiles')
     .insert({
       id: authData.user.id,
@@ -54,13 +47,13 @@ export async function createUser(rawInput: unknown) {
 }
 
 export async function toggleUserStatus(userId: string, currentStatus: string) {
-  await assertAdmin()
+  await getAdminClient() // auth check
   const adminClient = createAdminClient()
   const newStatus = currentStatus === 'active' ? 'deactivated' : 'active'
 
-  const { error } = await (adminClient as any)
+  const { error } = await adminClient
     .from('profiles')
-    .update({ status: newStatus })
+    .update({ status: newStatus as 'active' | 'deactivated' })
     .eq('id', userId)
 
   if (error) return { error: error.message }
@@ -70,10 +63,10 @@ export async function toggleUserStatus(userId: string, currentStatus: string) {
 }
 
 export async function updateUserPayRate(userId: string, payRate: number) {
-  await assertAdmin()
+  await getAdminClient() // auth check
   const adminClient = createAdminClient()
 
-  const { error } = await (adminClient as any)
+  const { error } = await adminClient
     .from('profiles')
     .update({ pay_rate: payRate })
     .eq('id', userId)
