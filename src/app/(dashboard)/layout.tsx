@@ -71,8 +71,8 @@ export default async function DashboardLayout({
           <SidebarInset className="relative flex flex-1 flex-col overflow-hidden bg-surface-1 sm:rounded-2xl rounded-none sm:m-4 m-0 sm:border border-0 border-hairline">
             {/* Subtle purple gradient background blobs scoped only to SidebarInset */}
             <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden rounded-none sm:rounded-2xl">
-              <div className="absolute -top-40 -left-40 w-[28rem] h-[28rem] bg-purple-500/10 dark:bg-purple-600/15 rounded-full blur-[120px]" />
-              <div className="absolute top-1/3 -right-40 w-[32rem] h-[32rem] bg-purple-500/5 dark:bg-purple-700/10 rounded-full blur-[140px]" />
+              <div className="absolute -top-40 -left-40 w-[20rem] h-[20rem] bg-purple-500/[0.04] dark:bg-purple-600/[0.05] rounded-full blur-[120px]" />
+              <div className="absolute top-1/3 -right-40 w-[24rem] h-[24rem] bg-purple-500/[0.015] dark:bg-purple-700/[0.025] rounded-full blur-[140px]" />
             </div>
 
             <div className="relative z-10 flex flex-col flex-1 overflow-hidden">
