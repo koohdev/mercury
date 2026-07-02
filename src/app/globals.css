@@ -309,4 +309,8 @@ body {
     padding-bottom: calc(env(safe-area-inset-bottom) + 1.5rem) !important;
   }
 
+  /* Prevent Radix UI focus/pointer lock-ups from freezing the page on mobile/Vercel */
+  body {
+    pointer-events: auto !important;
+  }
 }
