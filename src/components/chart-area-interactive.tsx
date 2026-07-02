@@ -38,6 +38,12 @@ interface ShiftData {
   total_break_time: string | null
 }
 
+interface ChartDataPoint {
+  date: string
+  active: number
+  breakTime: number
+}
+
 interface ChartAreaInteractiveProps {
   shiftsData: ShiftData[]
 }
@@ -75,7 +81,7 @@ export function ChartAreaInteractive({ shiftsData }: ChartAreaInteractiveProps) 
   // Generate dynamic chart data based on shiftsData
   const processedData = React.useMemo(() => {
     const daysCount = timeRange === "7d" ? 7 : 30
-    const result: Array<{ date: string; active: number; breakTime: number }> = []
+    const result: ChartDataPoint[] = []
 
     for (let i = daysCount - 1; i >= 0; i--) {
       const d = new Date()
