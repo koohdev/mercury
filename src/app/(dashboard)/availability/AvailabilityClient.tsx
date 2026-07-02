@@ -111,10 +111,14 @@ export default function AvailabilityClient({
       {/* Timezone notice */}
       <div className="flex items-start gap-sm bg-surface-1 p-sm border border-hairline rounded-lg text-body-sm text-ink-muted">
         <Globe className="mt-0.5 w-4 h-4 text-ink-subtle shrink-0" />
-        <div>
-          <span className="font-medium text-ink">Your timezone: </span>
-          <span>{userTimezone}</span>
-          <span className="ml-xs text-ink-tertiary">— Times entered and shown in this timezone. Stored as UTC.</span>
+        <div className="flex flex-col sm:flex-row sm:items-baseline gap-x-xs gap-y-0.5">
+          <div>
+            <span className="font-medium text-ink">Your timezone: </span>
+            <span className="font-semibold text-ink">{userTimezone}</span>
+          </div>
+          <span className="text-ink-tertiary text-xs sm:text-body-sm sm:before:content-['—_']">
+            Times entered and shown in this timezone. Stored as UTC.
+          </span>
         </div>
       </div>
 
@@ -132,17 +136,19 @@ export default function AvailabilityClient({
           return (
             <div
               key={dayOfWeek}
-              className={`flex flex-col sm:flex-row sm:items-center gap-sm p-md rounded-lg border transition-all duration-150 ${
+              className={`flex flex-col sm:flex-row sm:items-center gap-md p-md rounded-lg border transition-all duration-150 ${
                 day.isAvailable
                   ? 'bg-surface-1 border-hairline-strong'
                   : 'bg-surface-1 border-hairline opacity-50'
               }`}
             >
-              {/* Checkbox + Day Name */}
-              <label className="flex items-center gap-sm sm:w-36 cursor-pointer shrink-0">
+              {/* Checkbox + Day Name (Full-width toggle on mobile for easier tapping) */}
+              <label
+                onClick={() => toggleDay(idx)}
+                className="flex items-center gap-sm sm:w-36 cursor-pointer shrink-0 select-none py-1 sm:py-0"
+              >
                 <div
-                  onClick={() => toggleDay(idx)}
-                  className={`h-5 w-5 rounded flex items-center justify-center border transition-all duration-150 cursor-pointer shrink-0 ${
+                  className={`h-5 w-5 rounded flex items-center justify-center border transition-all duration-150 shrink-0 ${
                     day.isAvailable
                       ? 'bg-primary border-primary'
                       : 'bg-surface-2 border-hairline-strong hover:border-ink-subtle'
@@ -150,31 +156,31 @@ export default function AvailabilityClient({
                 >
                   {day.isAvailable && <Check className="w-3.5 h-3.5 text-primary-foreground" strokeWidth={3} />}
                 </div>
-                <span className={`text-body-sm font-medium select-none ${day.isAvailable ? 'text-ink' : 'text-ink-subtle'}`}>
+                <span className={`text-body-sm font-medium ${day.isAvailable ? 'text-ink' : 'text-ink-subtle'}`}>
                   {label}
                 </span>
               </label>
 
               {/* Time Inputs */}
               <div className={`flex flex-1 items-center gap-sm transition-opacity duration-150 ${day.isAvailable ? '' : 'opacity-40 pointer-events-none'}`}>
-                <div className="flex flex-1 items-center gap-xs">
-                  <Clock className="w-4 h-4 text-ink-subtle shrink-0" />
+                <Clock className="w-4 h-4 text-ink-subtle shrink-0" />
+                <div className="flex-1 min-w-0">
                   <input
                     type="time"
                     disabled={!day.isAvailable}
                     value={day.startTime}
                     onChange={(e) => updateTime(idx, 'startTime', e.target.value)}
-                    className="flex-1 bg-surface-2 px-sm py-1.5 border border-hairline rounded-md focus:outline-2 focus:outline-primary-focus min-w-0 text-body-sm text-ink disabled:cursor-not-allowed"
+                    className="w-full bg-surface-2 px-sm py-1.5 border border-hairline rounded-md focus:outline-2 focus:outline-primary-focus text-body-sm text-ink disabled:cursor-not-allowed min-w-0"
                   />
                 </div>
                 <span className="font-medium text-body-sm text-ink-subtle shrink-0">to</span>
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <input
                     type="time"
                     disabled={!day.isAvailable}
                     value={day.endTime}
                     onChange={(e) => updateTime(idx, 'endTime', e.target.value)}
-                    className="bg-surface-2 px-sm py-1.5 border border-hairline rounded-md focus:outline-2 focus:outline-primary-focus w-full text-body-sm text-ink disabled:cursor-not-allowed"
+                    className="w-full bg-surface-2 px-sm py-1.5 border border-hairline rounded-md focus:outline-2 focus:outline-primary-focus text-body-sm text-ink disabled:cursor-not-allowed min-w-0"
                   />
                 </div>
               </div>
