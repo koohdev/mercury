@@ -81,9 +81,9 @@ export default async function DashboardPage() {
   const estimatedPay = Math.min(totalHours * hourlyRate, payRate)
 
   return (
-    <div className="relative flex flex-1 flex-col gap-6 w-full pb-8">
+    <div className="relative z-0 flex flex-1 flex-col gap-6 w-full pb-8">
       {/* Subtle purple gradient background blobs */}
-      <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden rounded-2xl">
+      <div className="absolute inset-0 pointer-events-none z-[-1] overflow-hidden rounded-2xl">
         <div className="absolute -top-40 -left-40 w-[32rem] h-[32rem] bg-purple-500/20 dark:bg-purple-600/25 rounded-full blur-[120px]" />
         <div className="absolute top-1/3 -right-40 w-[36rem] h-[36rem] bg-purple-500/15 dark:bg-purple-700/20 rounded-full blur-[140px]" />
       </div>
