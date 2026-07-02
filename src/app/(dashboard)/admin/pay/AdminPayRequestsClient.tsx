@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Check, X, Loader2, AlertCircle, Clock, Filter, CreditCard } from 'lucide-react'
+import { Check, X, Loader2, AlertCircle, Filter, CreditCard } from 'lucide-react'
 import { resolvePayChangeRequest } from '@/lib/actions/pay'
 import { PayChangeRequest } from '@/lib/types'
+import { Input } from '@/components/ui/input'
 
 interface RequestWithJoins extends PayChangeRequest {
   profiles?: { legal_full_name: string; email: string } | null
@@ -194,7 +195,7 @@ export default function AdminPayRequestsClient({ requests }: AdminPayRequestsCli
               {/* Action Buttons (pending only) */}
               {req.status === 'pending' && (
                 <div className="space-y-xs pt-xs border-t border-hairline">
-                  <input
+                  <Input
                     type="text"
                     placeholder={`Notes ${req.status === 'pending' ? '(required for deny)' : '(optional)'}...`}
                     value={adminNotes[req.id] || ''}
@@ -208,7 +209,7 @@ export default function AdminPayRequestsClient({ requests }: AdminPayRequestsCli
                         })
                       }
                     }}
-                    className="w-full bg-surface-2 text-ink text-body-sm px-sm py-1.5 rounded-md border border-hairline focus:outline-2 focus:outline-primary-focus placeholder:text-ink-subtle"
+                    className="w-full bg-surface-2 text-ink text-body-sm px-sm py-1.5 rounded-md border border-hairline focus:outline-2 focus:outline-primary-focus placeholder:text-ink-subtle h-10"
                   />
                   {denyErrors[req.id] && (
                     <p className="text-caption text-red-400">{denyErrors[req.id]}</p>

@@ -21,7 +21,6 @@ import {
   UserCheck,
   UserX,
   Edit2,
-  Check,
   ShieldCheck,
   Shield,
   Search,
@@ -54,6 +53,11 @@ import {
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 
 interface UserProfile {
   id: string
@@ -74,72 +78,79 @@ interface AdminUsersClientProps {
 
 interface PayRateCellProps {
   user: UserProfile
-  isEditing: boolean
-  onStartEdit: () => void
-  onCancel: () => void
   onSave: (rate: number) => Promise<void>
   isPending: boolean
 }
 
 function PayRateCell({
   user,
-  isEditing,
-  onStartEdit,
-  onCancel,
   onSave,
   isPending,
 }: PayRateCellProps) {
   const [val, setVal] = React.useState(String(user.pay_rate))
+  const [isOpen, setIsOpen] = React.useState(false)
 
-  React.useEffect(() => {
-    if (isEditing) {
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open)
+    if (open) {
       setVal(String(user.pay_rate))
     }
-  }, [isEditing, user.pay_rate])
-
-  if (isEditing) {
-    return (
-      <div className="flex items-center gap-xs" onClick={(e) => e.stopPropagation()}>
-        <span className="text-ink-subtle text-sm">$</span>
-        <input
-          type="number"
-          step="0.01"
-          min="0"
-          value={val}
-          onChange={(e) => setVal(e.target.value)}
-          className="w-20 bg-surface-2 text-ink text-sm px-xs py-0.5 rounded-md border border-hairline focus:outline-2 focus:outline-primary-focus"
-          autoFocus
-        />
-        <button
-          onClick={async () => {
-            const rate = parseFloat(val)
-            if (!isNaN(rate) && rate >= 0) {
-              await onSave(rate)
-            }
-          }}
-          disabled={isPending}
-          className="p-1 bg-primary/10 hover:bg-primary/20 text-primary rounded cursor-pointer disabled:opacity-50"
-        >
-          <Check className="h-3.5 w-3.5" />
-        </button>
-        <button
-          onClick={onCancel}
-          className="p-1 hover:bg-surface-2 text-ink-subtle rounded cursor-pointer"
-        >
-          <X className="h-3.5 w-3.5" />
-        </button>
-      </div>
-    )
   }
 
   return (
-    <button
-      onClick={onStartEdit}
-      className="flex items-center gap-1 text-sm text-ink-muted hover:text-ink cursor-pointer"
-    >
-      <Edit2 className="h-3 w-3" />
-      ${Number(user.pay_rate).toFixed(2)}
-    </button>
+    <Popover open={isOpen} onOpenChange={handleOpenChange}>
+      <PopoverTrigger asChild>
+        <button
+          className="flex items-center gap-1 text-sm text-ink-muted hover:text-ink cursor-pointer bg-transparent border-0 p-0 focus:outline-hidden"
+        >
+          <Edit2 className="h-3 w-3" />
+          ${Number(user.pay_rate).toFixed(2)}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-56 p-3 bg-surface-1 border border-hairline text-ink" align="start" onClick={(e) => e.stopPropagation()}>
+        <div className="space-y-xs">
+          <div className="font-semibold text-caption text-ink-subtle uppercase tracking-wider">
+            Edit Monthly Pay
+          </div>
+          <div className="flex items-center gap-xs">
+            <span className="text-ink-subtle text-sm">$</span>
+            <Input
+              type="number"
+              step="0.01"
+              min="0"
+              value={val}
+              onChange={(e) => setVal(e.target.value)}
+              className="flex-1 bg-surface-2 text-ink h-8"
+              autoFocus
+            />
+          </div>
+          <div className="flex justify-end gap-xs">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsOpen(false)}
+              className="text-xs h-7 px-2.5 cursor-pointer"
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              disabled={isPending}
+              onClick={async () => {
+                const rate = parseFloat(val)
+                if (!isNaN(rate) && rate >= 0) {
+                  await onSave(rate)
+                  setIsOpen(false)
+                }
+              }}
+              className="text-xs h-7 px-2.5 bg-primary text-primary-foreground hover:bg-primary-hover cursor-pointer"
+            >
+              {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Save'}
+            </Button>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
   )
 }
 
@@ -149,7 +160,6 @@ export default function AdminUsersClient({ users: initialUsers }: AdminUsersClie
   const [showCreateModal, setShowCreateModal] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [globalSearch, setGlobalSearch] = React.useState('')
-  const [editPayRateId, setEditPayRateId] = React.useState<string | null>(null)
 
   // Create form state
   const [newEmail, setNewEmail] = React.useState('')
@@ -181,12 +191,12 @@ export default function AdminUsersClient({ users: initialUsers }: AdminUsersClie
     })
   }
 
-  const handleToggleStatus = (userId: string, currentStatus: string) => {
+  const handleToggleStatus = React.useCallback((userId: string, currentStatus: string) => {
     startTransition(async () => {
       const res = await toggleUserStatus(userId, currentStatus)
       if (res?.error) setError(res.error)
     })
-  }
+  }, [])
 
   // Filtered dataset for local search
   const filteredData = React.useMemo(() => {
@@ -306,14 +316,10 @@ export default function AdminUsersClient({ users: initialUsers }: AdminUsersClie
           return (
             <PayRateCell
               user={user}
-              isEditing={editPayRateId === user.id}
-              onStartEdit={() => setEditPayRateId(user.id)}
-              onCancel={() => setEditPayRateId(null)}
               onSave={async (rate) => {
                 startTransition(async () => {
                   const res = await updateUserPayRate(user.id, rate)
                   if (res?.error) setError(res.error)
-                  else setEditPayRateId(null)
                 })
               }}
               isPending={isPending}
@@ -360,7 +366,7 @@ export default function AdminUsersClient({ users: initialUsers }: AdminUsersClie
         },
       },
     ],
-    [editPayRateId, isPending, handleToggleStatus]
+    [isPending, handleToggleStatus]
   )
 
   const table = useReactTable({

@@ -156,6 +156,20 @@ function SidebarProvider({
   )
 }
 
+/**
+ * Force-clear any Radix-applied body locks.
+ * iOS Safari (especially PWA standalone mode) can get stuck with
+ * pointer-events: none / overflow: hidden after a Radix Dialog closes.
+ */
+function forceUnlockBody() {
+  document.body.style.pointerEvents = ""
+  document.body.style.overflow = ""
+  document.body.style.removeProperty("pointer-events")
+  document.body.style.removeProperty("overflow")
+  // Radix also uses a data attribute for its lock
+  document.body.removeAttribute("data-scroll-locked")
+}
+
 function Sidebar({
   side = "left",
   variant = "sidebar",
@@ -186,9 +200,48 @@ function Sidebar({
     )
   }
 
+  // Safety net: MutationObserver to catch any stuck body locks on iOS
+  React.useEffect(() => {
+    if (!isMobile) return
+    const observer = new MutationObserver(() => {
+      // If the sidebar is closed but body is still locked, force-clear
+      if (!openMobile && (
+        document.body.style.pointerEvents === "none" ||
+        document.body.style.overflow === "hidden" ||
+        document.body.hasAttribute("data-scroll-locked")
+      )) {
+        forceUnlockBody()
+      }
+    })
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["style", "data-scroll-locked"],
+    })
+    return () => observer.disconnect()
+  }, [isMobile, openMobile])
+
   if (isMobile) {
+    const handleOpenChange = (open: boolean) => {
+      setOpenMobile(open)
+      if (!open) {
+        // Immediate cleanup
+        forceUnlockBody()
+        // Deferred cleanup to catch any Radix post-animation locks
+        requestAnimationFrame(() => forceUnlockBody())
+        setTimeout(() => forceUnlockBody(), 300)
+      }
+    }
+
     return (
-      <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
+      <Sheet open={openMobile} onOpenChange={handleOpenChange} modal={false} {...props}>
+        {/* Manual overlay since modal={false} disables Radix's built-in overlay */}
+        {openMobile && (
+          <div
+            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs animate-in fade-in-0 duration-200"
+            onClick={() => handleOpenChange(false)}
+            aria-hidden="true"
+          />
+        )}
         <SheetContent
           dir={dir}
           data-sidebar="sidebar"

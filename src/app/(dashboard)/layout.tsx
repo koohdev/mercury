@@ -69,10 +69,19 @@ export default async function DashboardLayout({
         <div className="flex min-h-screen w-full bg-canvas text-ink">
           <AppSidebar isAdmin={isAdmin} user={user} hasActiveShift={hasActiveShift} />
           <SidebarInset className="relative flex flex-1 flex-col overflow-hidden bg-surface-1 sm:rounded-2xl rounded-none sm:m-4 m-0 sm:border border-0 border-hairline">
-            {/* Subtle purple gradient background blobs scoped only to SidebarInset */}
+            {/* Ambient background gradients for a premium depth effect */}
             <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden rounded-none sm:rounded-2xl">
-              <div className="absolute -top-40 -left-40 w-80 h-80 bg-purple-500/4 dark:bg-purple-600/5 rounded-full blur-[120px]" />
-              <div className="absolute top-1/3 -right-40 w-96 h-96 bg-purple-500/1.5 dark:bg-purple-700/2.5 rounded-full blur-[140px]" />
+              {/* Top-Left: Purple & Indigo blend (pronounced purple) */}
+              <div className="absolute -top-40 -left-40 w-80 h-80 bg-purple-500/10 dark:bg-purple-600/12 rounded-full blur-[120px] animate-pulse-slow" />
+              <div className="absolute -top-32 -left-20 w-80 h-80 bg-indigo-500/8 dark:bg-indigo-600/10 rounded-full blur-[120px] animate-drift-slow" />
+
+              {/* Middle-Right: Purple & Fuchsia blend */}
+              <div className="absolute top-1/3 -right-40 w-96 h-96 bg-purple-500/4 dark:bg-purple-700/6 rounded-full blur-[140px] animate-pulse-slow" />
+              <div className="absolute top-1/4 -right-20 w-80 h-80 bg-fuchsia-500/3.5 dark:bg-fuchsia-700/5 rounded-full blur-[130px] animate-drift-slow" />
+
+              {/* Bottom-Left & Bottom-Right: Sunny Yellow / Amber (seen where purple isn't) */}
+              <div className="absolute -bottom-40 -left-20 w-96 h-96 bg-amber-400/6 dark:bg-yellow-600/5 rounded-full blur-[140px] animate-drift-slow" />
+              <div className="absolute bottom-1/4 -right-40 w-80 h-80 bg-yellow-400/4.5 dark:bg-amber-600/3.5 rounded-full blur-[130px] animate-pulse-slow" />
             </div>
 
             <div className="relative z-10 flex flex-col flex-1 overflow-hidden">

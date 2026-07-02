@@ -312,5 +312,47 @@ body {
   /* Prevent Radix UI focus/pointer lock-ups from freezing the page on mobile/Vercel */
   body {
     pointer-events: auto !important;
+    /* iOS PWA: prevent 300ms tap delay and bounce/overscroll that can
+       interfere with Radix Dialog's touch event handling */
+    touch-action: manipulation;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  html {
+    /* Prevent iOS rubber-band scroll in PWA standalone mode */
+    overscroll-behavior: none;
+  }
+}
+
+/* Custom ambient background blob animations */
+.animate-pulse-slow {
+  animation: pulse-slow 15s ease-in-out infinite;
+}
+
+.animate-drift-slow {
+  animation: drift-slow 22s ease-in-out infinite;
+}
+
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 0.8;
+    transform: scale(1) translate(0, 0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06) translate(8px, -4px);
+  }
+}
+
+@keyframes drift-slow {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(25px, -15px) scale(1.04);
+  }
+  66% {
+    transform: translate(-10px, 20px) scale(0.96);
   }
 }

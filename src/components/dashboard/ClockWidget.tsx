@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { useTimer } from '@/hooks/useTimer'
+import { useTimer, useBreakTimer } from '@/hooks/useTimer'
 import { clockIn, clockOut, startBreak, endBreak } from '@/lib/actions/clock'
 import { Play, Square, Pause } from 'lucide-react'
 
@@ -25,6 +25,11 @@ export default function ClockWidget({ activeShift }: ClockWidgetProps) {
   const breaks = activeShift?.breaks || []
 
   const { formatted } = useTimer(clockInTime, breaks, shiftStatus as 'active' | 'on_break' | 'completed')
+
+  const { formatted: formattedBreakTime } = useBreakTimer(
+    breaks,
+    shiftStatus as 'active' | 'on_break' | 'completed'
+  )
 
   const handleClockIn = () => {
     startTransition(async () => {
@@ -82,8 +87,15 @@ export default function ClockWidget({ activeShift }: ClockWidgetProps) {
             {shiftStatus === 'completed' && 'Off Duty'}
           </h3>
         </div>
-        <div className="text-display-md font-mono font-semibold tracking-display-md text-ink">
-          {formatted}
+        <div className="flex flex-col items-end justify-center">
+          <div className="text-display-md font-mono font-semibold tracking-display-md text-ink">
+            {formatted}
+          </div>
+          {shiftStatus !== 'completed' && breaks.length > 0 && (
+            <div className="text-caption font-mono font-medium text-ink-subtle mt-xxs uppercase tracking-wider">
+              Break: {formattedBreakTime}
+            </div>
+          )}
         </div>
       </div>
 

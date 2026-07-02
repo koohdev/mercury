@@ -68,6 +68,17 @@ export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...p
   React.useEffect(() => {
     document.body.style.pointerEvents = ""
     document.body.style.overflow = ""
+    document.body.style.removeProperty("pointer-events")
+    document.body.style.removeProperty("overflow")
+    document.body.removeAttribute("data-scroll-locked")
+    return () => {
+      // Also clean up on unmount (e.g., iOS PWA backgrounding)
+      document.body.style.pointerEvents = ""
+      document.body.style.overflow = ""
+      document.body.style.removeProperty("pointer-events")
+      document.body.style.removeProperty("overflow")
+      document.body.removeAttribute("data-scroll-locked")
+    }
   }, [pathname])
 
   const handleLinkClick = (e?: React.MouseEvent<HTMLAnchorElement>, href?: string) => {

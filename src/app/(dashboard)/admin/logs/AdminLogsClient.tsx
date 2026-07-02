@@ -120,7 +120,7 @@ export default function AdminLogsClient({ initialShifts, moderators, adminTimezo
               placeholder="Search by moderator name, summary, or date..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-surface-1 text-ink text-body pl-10 pr-sm py-2 rounded-md border border-hairline focus:outline-2 focus:outline-primary-focus placeholder:text-ink-subtle transition-colors duration-150"
+              className="w-full h-10 bg-surface-1 text-ink text-body pl-10 pr-sm rounded-md border border-hairline focus:outline-2 focus:outline-primary-focus placeholder:text-ink-subtle transition-colors duration-150"
             />
           </div>
 
@@ -129,7 +129,7 @@ export default function AdminLogsClient({ initialShifts, moderators, adminTimezo
             <select
               value={selectedModeratorId}
               onChange={(e) => setSelectedModeratorId(e.target.value)}
-              className="w-full bg-surface-1 text-ink text-body px-sm py-2 rounded-md border border-hairline focus:outline-2 focus:outline-primary-focus cursor-pointer"
+              className="w-full h-10 bg-surface-1 text-ink text-body px-sm rounded-md border border-hairline focus:outline-2 focus:outline-primary-focus cursor-pointer"
             >
               <option value="all">All Moderators</option>
               {moderators.map((mod) => (
@@ -145,7 +145,7 @@ export default function AdminLogsClient({ initialShifts, moderators, adminTimezo
         <button
           onClick={handleExportCSV}
           disabled={filteredShifts.length === 0}
-          className="inline-flex items-center gap-xs bg-primary hover:bg-primary-hover active:bg-primary-focus text-primary-foreground px-lg py-2 rounded-md font-medium text-button transition-all duration-150 cursor-pointer shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex h-10 items-center justify-center gap-xs bg-primary hover:bg-primary-hover active:bg-primary-focus text-primary-foreground px-lg rounded-md font-medium text-button transition-all duration-150 cursor-pointer shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Download className="h-4 w-4" />
           Export CSV

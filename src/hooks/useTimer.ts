@@ -18,9 +18,11 @@ export function useTimer(
 
     let breakMs = 0
     breaks.forEach((b) => {
-      const start = new Date(b.start_time).getTime()
-      const end = b.end_time ? new Date(b.end_time).getTime() : Date.now()
-      breakMs += end - start
+      if (b.end_time) {
+        const start = new Date(b.start_time).getTime()
+        const end = new Date(b.end_time).getTime()
+        breakMs += end - start
+      }
     })
 
     const now =
@@ -54,6 +56,55 @@ export function useTimer(
 
     return () => clearInterval(interval)
   }, [clockInTime, status, getElapsedSeconds])
+
+  const formatTime = (totalSeconds: number) => {
+    const hrs = Math.floor(totalSeconds / 3600)
+    const mins = Math.floor((totalSeconds % 3600) / 60)
+    const secs = totalSeconds % 60
+    return [
+      hrs.toString().padStart(2, '0'),
+      mins.toString().padStart(2, '0'),
+      secs.toString().padStart(2, '0'),
+    ].join(':')
+  }
+
+  return { seconds, formatted: mounted ? formatTime(seconds) : '00:00:00' }
+}
+
+export function useBreakTimer(
+  breaks: BreakItem[] = [],
+  status: 'active' | 'on_break' | 'completed'
+) {
+  const getElapsedBreakSeconds = useCallback(() => {
+    let totalMs = 0
+    breaks.forEach((b) => {
+      const start = new Date(b.start_time).getTime()
+      const end = b.end_time ? new Date(b.end_time).getTime() : Date.now()
+      totalMs += end - start
+    })
+    return Math.floor(totalMs / 1000)
+  }, [breaks])
+
+  const [seconds, setSeconds] = useState(getElapsedBreakSeconds)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setMounted(true), 0)
+    return () => clearTimeout(timer)
+  }, [])
+
+  useEffect(() => {
+    if (status !== 'on_break') {
+      const timer = setTimeout(() => setSeconds(getElapsedBreakSeconds()), 0)
+      return () => clearTimeout(timer)
+    }
+
+    const interval = setInterval(() => {
+      setSeconds(getElapsedBreakSeconds())
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [status, getElapsedBreakSeconds])
 
   const formatTime = (totalSeconds: number) => {
     const hrs = Math.floor(totalSeconds / 3600)
