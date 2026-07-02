@@ -308,4 +308,9 @@ body {
   main {
     padding-bottom: calc(env(safe-area-inset-bottom) + 1.5rem) !important;
   }
+
+  /* Fix Radix UI pointer-events: none body lock getting stuck on Next.js navigation */
+  body[style*="pointer-events: none"] {
+    pointer-events: auto !important;
+  }
 }
