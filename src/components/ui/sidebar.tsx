@@ -197,7 +197,11 @@ function Sidebar({
       attributes: true,
       attributeFilter: ["style", "data-scroll-locked"],
     })
-    return () => observer.disconnect()
+    return () => {
+      observer.disconnect()
+      // Force-clear any body locks when unmounting, transitioning isMobile, or toggling state
+      forceUnlockBody()
+    }
   }, [isMobile, openMobile])
 
   if (collapsible === "none") {

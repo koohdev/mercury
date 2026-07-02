@@ -311,10 +311,22 @@ body {
     padding-bottom: calc(env(safe-area-inset-bottom) + 1.5rem) !important;
   }
 
-  /* Mobile Sidebar Safe Area Support */
+  /* ── Sidebar Safe Area Support (PWA standalone on iOS) ── */
+  
+  /* Mobile Sheet sidebar */
   [data-sidebar="sidebar"][data-mobile="true"] {
-    padding-top: calc(env(safe-area-inset-top) + .9rem);
+    padding-top: calc(env(safe-area-inset-top) + 2rem);
     padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Desktop fixed sidebar — push header content below the notch */
+  [data-slot="sidebar-container"] [data-sidebar="header"] {
+    padding-top: calc(env(safe-area-inset-top) + 0.75rem);
+  }
+
+  /* Desktop sidebar footer — keep clear of home indicator */
+  [data-slot="sidebar-container"] [data-sidebar="footer"] {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 0.75rem);
   }
 
   /* Prevent Radix UI focus/pointer lock-ups from freezing the page on mobile/Vercel */
