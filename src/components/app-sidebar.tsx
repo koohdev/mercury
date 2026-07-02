@@ -65,10 +65,14 @@ export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...p
     return () => window.removeEventListener("resize", checkViewport)
   }, [])
 
+  // Clean up any stuck Radix body locks/pointer-events on page navigation
+  React.useEffect(() => {
+    document.body.style.pointerEvents = ""
+    document.body.style.overflow = ""
+  }, [pathname])
+
   const handleLinkClick = () => {
-    if (isMobile) {
-      setOpenMobile(false)
-    }
+    setOpenMobile(false)
   }
 
   const triggerClockIn = () => {
