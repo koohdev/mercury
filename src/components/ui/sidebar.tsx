@@ -232,7 +232,7 @@ function Sidebar({
     }
 
     return (
-      <Sheet open={openMobile} onOpenChange={handleOpenChange} modal={true} {...props}>
+      <Sheet open={openMobile} onOpenChange={handleOpenChange} modal={false} {...props}>
         <SheetContent
           dir={dir}
           data-sidebar="sidebar"
@@ -566,7 +566,7 @@ function SidebarMenuButton({
     />
   )
 
-  if (!tooltip) {
+  if (!tooltip || isMobile) {
     return button
   }
 

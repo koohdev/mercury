@@ -3,6 +3,7 @@ import { Geist } from 'next/font/google'
 import './globals.css'
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider"
+import { DevMobileToggle } from "@/components/dev-mobile-toggle"
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'})
 
@@ -47,6 +48,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
+          <DevMobileToggle />
         </ThemeProvider>
       </body>
     </html>
