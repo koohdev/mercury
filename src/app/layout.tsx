@@ -7,8 +7,16 @@ import { ThemeProvider } from "@/components/theme-provider"
 const geist = Geist({subsets:['latin'],variable:'--font-sans'})
 
 export const metadata: Metadata = {
-  title: 'Mercury Marketing - Moderator Portal',
-  description: 'Internal operations portal for content moderators',
+  title: 'Clocky',
+  description: 'Track your shifts and hours logged with ease.',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Clocky',
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',
+  }
 }
 
 export default function RootLayout({
@@ -18,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={cn("h-full", "antialiased", "font-sans", geist.variable)} suppressHydrationWarning>
-      <body className="min-h-full flex flex-col bg-canvas text-ink">
+      <body className="min-h-full flex flex-col bg-canvas text-ink" suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"

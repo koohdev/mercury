@@ -21,36 +21,38 @@ export default async function DashboardLayout({
   const role = user.app_metadata?.role || "moderator"
   const isAdmin = role === "admin"
 
-  // Fetch completed shifts to calculate streak
+  // Run all data queries in parallel for faster page loads
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-  const { data: shifts } = await supabase
-    .from("shifts")
-    .select("clock_in")
-    .eq("user_id", user.id)
-    .eq("status", "completed")
-    .gte("clock_in", thirtyDaysAgo.toISOString())
-    .order("clock_in", { ascending: false })
+  const [
+    { data: shifts },
+    { data: notifications },
+    { data: activeShifts },
+  ] = await Promise.all([
+    supabase
+      .from("shifts")
+      .select("clock_in")
+      .eq("user_id", user.id)
+      .eq("status", "completed")
+      .gte("clock_in", thirtyDaysAgo.toISOString())
+      .order("clock_in", { ascending: false }),
+    (supabase as any)
+      .from("notifications")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(30),
+    supabase
+      .from("shifts")
+      .select("id")
+      .eq("user_id", user.id)
+      .in("status", ["active", "on_break"])
+      .limit(1),
+  ])
 
   const completedDates = (shifts || []).map((s: any) => s.clock_in)
   const streakCount = calculateStreak(completedDates)
-
-  // Fetch initial notifications (most recent 30)
-  const { data: notifications } = await (supabase as any)
-    .from("notifications")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(30)
-
-  // Fetch active shift (status IS 'active' OR 'on_break')
-  const { data: activeShifts } = await supabase
-    .from("shifts")
-    .select("id")
-    .eq("user_id", user.id)
-    .in("status", ["active", "on_break"])
-    .limit(1)
   const hasActiveShift = !!(activeShifts && activeShifts.length > 0)
 
   return (
@@ -80,3 +82,4 @@ export default async function DashboardLayout({
     </TooltipProvider>
   )
 }
+
