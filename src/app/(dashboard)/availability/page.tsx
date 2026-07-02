@@ -1,9 +1,10 @@
 import { createServerClient, getAuthUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import AvailabilityClient from './AvailabilityClient'
+import MembersAvailabilityClient from './MembersAvailabilityClient'
 
 export const metadata = {
-  title: 'My Availability | Mercury Marketing',
+  title: 'Availability | Mercury Marketing',
   description: 'Manage your weekly availability hours.',
 }
 
@@ -15,8 +16,38 @@ export default async function AvailabilityPage() {
   }
 
   const supabase = await createServerClient()
+  const role = user.app_metadata?.role || 'moderator'
+  const isAdmin = role === 'admin'
 
-  // Fetch timezone and availability in parallel
+  if (isAdmin) {
+    // Admin: show Members Availability with dropdown
+    const [membersRes, allAvailabilityRes, profileRes] = await Promise.all([
+      supabase
+        .from('profiles')
+        .select('id, legal_full_name, email, role, timezone')
+        .in('role', ['moderator', 'manager'])
+        .eq('status', 'active')
+        .order('legal_full_name', { ascending: true }),
+      supabase
+        .from('availability')
+        .select('*'),
+      supabase
+        .from('profiles')
+        .select('timezone')
+        .eq('id', user.id)
+        .single(),
+    ])
+
+    return (
+      <MembersAvailabilityClient
+        members={membersRes.data || []}
+        allAvailability={allAvailabilityRes.data || []}
+        adminTimezone={profileRes.data?.timezone || 'Asia/Manila'}
+      />
+    )
+  }
+
+  // Non-admin: show own editable availability
   const [profileRes, availabilityRes] = await Promise.all([
     supabase
       .from('profiles')

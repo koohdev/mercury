@@ -366,7 +366,7 @@ export default function ScheduleManager({
           <h2 className="mt-xxs font-semibold text-headline text-ink">Chat Coverage</h2>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center gap-sm w-full sm:w-auto">
+        <div className="flex sm:flex-row flex-col sm:items-center gap-sm w-full sm:w-auto">
           <div className="flex flex-wrap items-center gap-sm w-full sm:w-auto">
             {/* View Toggles */}
             <div className="flex flex-1 sm:flex-none bg-surface-1 p-xxs border border-hairline rounded-md">
@@ -405,7 +405,7 @@ export default function ScheduleManager({
             </div>
 
             {/* Navigation Controls */}
-            <div className="flex flex-1 sm:flex-none items-center justify-between sm:justify-start gap-xxs bg-surface-1 p-xxs border border-hairline rounded-md">
+            <div className="flex flex-1 sm:flex-none justify-between sm:justify-start items-center gap-xxs bg-surface-1 p-xxs border border-hairline rounded-md">
               <button
                 onClick={handlePrev}
                 className="hover:bg-surface-2 p-1.5 rounded-sm text-ink-subtle hover:text-ink cursor-pointer"
@@ -414,7 +414,7 @@ export default function ScheduleManager({
               </button>
               <button
                 onClick={handleToday}
-                className="hover:bg-surface-2 px-sm py-1 rounded-sm font-medium text-caption text-ink-subtle hover:text-ink cursor-pointer flex-1 sm:flex-initial text-center"
+                className="sm:flex-initial flex-1 hover:bg-surface-2 px-sm py-1 rounded-sm font-medium text-caption text-ink-subtle hover:text-ink text-center cursor-pointer"
               >
                 Today
               </button>
@@ -431,7 +431,7 @@ export default function ScheduleManager({
           {isAdmin && (
             <button
               onClick={openCreateModal}
-              className="flex items-center justify-center gap-xxs bg-primary hover:bg-primary-hover px-sm py-2 rounded-md font-medium text-button text-primary-foreground transition-colors cursor-pointer w-full sm:w-auto shadow-md"
+              className="flex justify-center items-center gap-xxs bg-primary hover:bg-primary-hover shadow-md px-sm py-2 rounded-md w-full sm:w-auto font-medium text-button text-primary-foreground transition-colors cursor-pointer"
             >
               <Plus className="w-4 h-4" /> Add Shift
             </button>
@@ -471,18 +471,18 @@ export default function ScheduleManager({
 
       {/* Calendar Grid View */}
       {viewMode === 'month' && (
-        <div className="border border-hairline rounded-lg bg-surface-1 overflow-hidden">
+        <div className="bg-surface-1 border border-hairline rounded-lg overflow-hidden">
           {/* Days of week header */}
-          <div className="grid grid-cols-7 bg-surface-2 border-b border-hairline">
+          <div className="grid grid-cols-7 bg-surface-2 border-hairline border-b">
             {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((dayName) => (
-              <div key={dayName} className="text-center py-xs text-caption font-semibold text-ink-subtle uppercase tracking-wider">
+              <div key={dayName} className="py-xs font-semibold text-caption text-ink-subtle text-center uppercase tracking-wider">
                 {dayName}
               </div>
             ))}
           </div>
 
           {/* Month grid days */}
-          <div className="grid grid-cols-7 bg-hairline gap-[1px]">
+          <div className="gap-px grid grid-cols-7 bg-hairline">
             {getMonthDays(currentDate).map((day, idx) => {
               const shifts = getShiftsForDay(day)
               const isToday = day.toDateString() === new Date().toDateString()
@@ -511,7 +511,7 @@ export default function ScheduleManager({
                   </div>
 
                   {/* Cell Shifts - Desktop only */}
-                  <div className="hidden md:flex flex-col gap-xxs mt-xs overflow-y-auto max-h-[80px]">
+                  <div className="hidden md:flex flex-col gap-xxs mt-xs max-h-[80px] overflow-y-auto">
                     {shifts.slice(0, 3).map((shift) => (
                       <div
                         key={shift.id}
@@ -524,24 +524,24 @@ export default function ScheduleManager({
                         style={{
                           backgroundColor: `${shift.color || '#5e6ad2'}1a`
                         }}
-                        className="text-[9px] leading-tight px-1.5 py-0.5 text-ink rounded-sm truncate"
+                        className="px-1.5 py-0.5 rounded-sm text-[9px] text-ink truncate leading-tight"
                       >
                         <span className="font-semibold">{getUserName(shift.user_id)}</span> {shift.label || 'Coverage'}
                       </div>
                     ))}
                     {shifts.length > 3 && (
-                      <span className="text-[8px] text-ink-subtle font-semibold pl-xxs">
+                      <span className="pl-xxs font-semibold text-[8px] text-ink-subtle">
                         +{shifts.length - 3} more
                       </span>
                     )}
                   </div>
 
                   {/* Indicator Dots - Mobile only */}
-                  <div className="flex md:hidden flex-wrap gap-[2px] mt-xs">
+                  <div className="md:hidden flex flex-wrap gap-[2px] mt-xs">
                     {shifts.map((shift) => (
                       <span
                         key={shift.id}
-                        className="h-1.5 w-1.5 rounded-full shrink-0"
+                        className="rounded-full w-1.5 h-1.5 shrink-0"
                         style={{ backgroundColor: shift.color || '#5e6ad2' }}
                       />
                     ))}
@@ -554,8 +554,8 @@ export default function ScheduleManager({
       )}
 
       {viewMode === 'week' && (
-        <div className="border border-hairline rounded-lg bg-surface-1 overflow-hidden">
-          <div className="grid grid-cols-1 md:grid-cols-7 bg-hairline gap-[1px]">
+        <div className="bg-surface-1 border border-hairline rounded-lg overflow-hidden">
+          <div className="gap-px grid grid-cols-1 md:grid-cols-7 bg-hairline">
             {weekDays.map((day, idx) => {
               const shifts = getShiftsForDay(day)
               const isToday = day.toDateString() === new Date().toDateString()
@@ -632,27 +632,27 @@ export default function ScheduleManager({
       )}
 
       {viewMode === 'timeline' && (
-        <div className="border border-hairline rounded-lg bg-surface-1 overflow-hidden shadow-sm relative">
+        <div className="relative bg-surface-1 shadow-sm border border-hairline rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
-            <div className="min-w-[1920px] divide-y divide-hairline relative">
+            <div className="relative divide-y divide-hairline min-w-[1920px]">
               {/* Current Time Indicator Line */}
               {currentDate.toDateString() === new Date().toDateString() && (
                 <div
                   style={{
                     left: `${(new Date().getHours() + new Date().getMinutes() / 60) * 80}px`
                   }}
-                  className="absolute top-0 bottom-0 w-[1.5px] bg-primary z-30 pointer-events-none flex flex-col items-center"
+                  className="top-0 bottom-0 z-30 absolute flex flex-col items-center bg-primary w-[1.5px] pointer-events-none"
                 >
-                  <div className="w-2.5 h-2.5 rounded-full bg-primary -mt-1 shadow-sm" />
+                  <div className="bg-primary shadow-sm -mt-1 rounded-full w-2.5 h-2.5" />
                 </div>
               )}
 
               {/* Header row */}
-              <div className="grid grid-cols-[repeat(24,80px)] bg-surface-2 divide-x divide-hairline border-b border-hairline">
+              <div className="grid grid-cols-[repeat(24,80px)] bg-surface-2 border-hairline border-b divide-x divide-hairline">
                 {Array.from({ length: 24 }).map((_, h) => {
                   const label = h === 0 ? '12 AM' : h === 12 ? '12 PM' : h < 12 ? `${h} AM` : `${h - 12} PM`
                   return (
-                    <div key={h} className="p-sm text-center flex flex-col items-center justify-center text-[10px] font-semibold text-ink-subtle uppercase tracking-wider">
+                    <div key={h} className="flex flex-col justify-center items-center p-sm font-semibold text-[10px] text-ink-subtle text-center uppercase tracking-wider">
                       {label}
                     </div>
                   )
@@ -665,13 +665,13 @@ export default function ScheduleManager({
                   const userShifts = entriesInView.filter((entry) => entry.user_id === profile.id)
 
                   return (
-                    <div key={profile.id} className="grid grid-cols-[repeat(24,80px)] grid-rows-1 divide-x divide-hairline hover:bg-surface-2/30 transition-colors relative items-center min-h-[56px]">
+                    <div key={profile.id} className="relative items-center grid grid-cols-[repeat(24,80px)] grid-rows-1 hover:bg-surface-2/30 divide-x divide-hairline min-h-[56px] transition-colors">
                       {/* Day cells background slots */}
                       {Array.from({ length: 24 }).map((_, h) => (
                         <div
                           key={h}
                           style={{ gridColumnStart: h + 1, gridRowStart: 1 }}
-                          className="h-full border-r border-hairline/20 bg-transparent z-0"
+                          className="z-0 bg-transparent border-hairline/20 border-r h-full"
                         />
                       ))}
 
@@ -704,17 +704,17 @@ export default function ScheduleManager({
                             }`}
                           >
                             <div className="flex items-center gap-xs truncate">
-                              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: shift.color || '#5e6ad2' }} />
-                              <span className="font-semibold text-ink text-[10px] truncate">
-                                <span className="text-primary font-bold">{getUserName(shift.user_id)}</span>{shift.label ? ` — ${shift.label}` : ''}
+                              <span className="rounded-full w-1.5 h-1.5 shrink-0" style={{ backgroundColor: shift.color || '#5e6ad2' }} />
+                              <span className="font-semibold text-[10px] text-ink truncate">
+                                <span className="font-bold text-primary">{getUserName(shift.user_id)}</span>{shift.label ? ` — ${shift.label}` : ''}
                               </span>
                             </div>
-                            <div className="flex items-center gap-xs shrink-0 pl-xs">
+                            <div className="flex items-center gap-xs pl-xs shrink-0">
                               <span className="font-mono text-[9px] text-ink-subtle">
                                 {formatTimeRange(shift.start_time, shift.end_time)}
                               </span>
                               {isCurrentUser && (
-                                <span className="bg-primary/10 text-primary border border-primary/20 px-1 rounded-sm text-[7px] font-medium">
+                                <span className="bg-primary/10 px-1 border border-primary/20 rounded-sm font-medium text-[7px] text-primary">
                                   You
                                 </span>
                               )}
@@ -726,7 +726,7 @@ export default function ScheduleManager({
                   )
                 })
               ) : (
-                <div className="p-lg text-center text-body-sm text-ink-subtle italic col-span-24">
+                <div className="col-span-24 p-lg text-body-sm text-ink-subtle text-center italic">
                   No moderators registered.
                 </div>
               )}

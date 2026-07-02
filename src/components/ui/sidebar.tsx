@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { flushSync } from "react-dom"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 
@@ -66,7 +67,12 @@ function SidebarProvider({
   onOpenChange?: (open: boolean) => void
 }) {
   const isMobile = useIsMobile()
-  const [openMobile, setOpenMobile] = React.useState(false)
+  const [openMobile, _setOpenMobile] = React.useState(false)
+  const setOpenMobile = React.useCallback((value: boolean | ((value: boolean) => boolean)) => {
+    flushSync(() => {
+      _setOpenMobile(value)
+    })
+  }, [])
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
@@ -75,11 +81,13 @@ function SidebarProvider({
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
       const openState = typeof value === "function" ? value(open) : value
-      if (setOpenProp) {
-        setOpenProp(openState)
-      } else {
-        _setOpen(openState)
-      }
+      flushSync(() => {
+        if (setOpenProp) {
+          setOpenProp(openState)
+        } else {
+          _setOpen(openState)
+        }
+      })
 
       // This sets the cookie to keep the sidebar state.
       document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`

@@ -110,13 +110,17 @@ export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...p
     }
   }
 
+  const role = user?.app_metadata?.role || "moderator"
+  const isModerator = role === "moderator"
+  const isManager = role === "manager"
+
   const links = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "My Campaigns", href: "/campaigns", icon: Briefcase },
     { name: "Team Schedule", href: "/schedule", icon: Calendar },
     { name: "Response Templates", href: "/templates", icon: FileText },
     { name: "My Log History", href: "/logs", icon: History },
-    { name: "My Availability", href: "/availability", icon: Clock },
+    { name: role === "admin" ? "Members Availability" : "My Availability", href: "/availability", icon: Clock },
     { name: "My Pay", href: "/pay", icon: CreditCard },
   ]
 
@@ -124,20 +128,17 @@ export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...p
     { name: "User Management", href: "/admin/users", icon: Users },
     { name: "Campaigns", href: "/admin/campaigns", icon: Briefcase },
     { name: "All Logs", href: "/admin/logs", icon: History },
+    { name: "Pay Requests", href: "/admin/pay", icon: CreditCard },
   ]
 
-  const role = user?.app_metadata?.role || "moderator"
-  const isModerator = role === "moderator"
-  const isManager = role === "manager"
-  const visibleLinks = links.filter((link) => {
-    if (isManager) {
-      return ["Dashboard", "Team Schedule", "Response Templates"].includes(link.name)
+  const visibleLinks = links
+  const visibleAdminLinks = adminLinks.filter((link) => {
+    // Managers: no User Management, no Pay Requests
+    if (role === "manager") {
+      return link.href !== "/admin/users" && link.href !== "/admin/pay"
     }
-    return true
+    return role === "admin"
   })
-  const visibleAdminLinks = adminLinks.filter(
-    (link) => role === "admin" || (role === "manager" && link.href !== "/admin/users")
-  )
 
   const secondaryLinks = [
     { name: "Settings", href: "/settings", icon: Settings },

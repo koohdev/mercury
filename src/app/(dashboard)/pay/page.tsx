@@ -12,10 +12,9 @@ export default async function PayPage() {
   if (!user) redirect('/login')
 
   const supabase = await createServerClient()
-  const isAdmin = user.app_metadata?.role === 'admin' || user.app_metadata?.role === 'manager'
 
-  // Fetch profile, pay records, change requests, and admin requests (if applicable) in parallel
-  const [profileRes, payRecordsRes, changeRequestsRes, adminPendingRequestsRes] = await Promise.all([
+  // Fetch profile, pay records, and change requests in parallel
+  const [profileRes, payRecordsRes, changeRequestsRes] = await Promise.all([
     supabase
       .from('profiles')
       .select('legal_full_name, pay_rate')
@@ -31,27 +30,18 @@ export default async function PayPage() {
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false }),
-    isAdmin
-      ? (supabase
-          .from('pay_change_requests')
-          .select('*, profiles(legal_full_name, email), pay_records(period_label, amount)')
-          .eq('status', 'pending')
-          .order('created_at', { ascending: true }))
-      : Promise.resolve({ data: null })
   ])
 
   const profile = profileRes.data
   const payRecords = payRecordsRes.data
   const changeRequests = changeRequestsRes.data
-  const adminPendingRequests = adminPendingRequestsRes.data || null
 
   return (
     <PayClient
       profile={profile}
       payRecords={payRecords || []}
       changeRequests={changeRequests || []}
-      adminPendingRequests={adminPendingRequests}
-      isAdmin={isAdmin}
     />
   )
 }
+

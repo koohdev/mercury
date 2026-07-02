@@ -1,6 +1,6 @@
 'use server'
 
-import { getAuthedClient, getAdminOrManagerClient } from '@/lib/supabase/server'
+import { getAuthedClient, getAdminClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -32,7 +32,13 @@ export async function resolvePayChangeRequest(
   decision: 'approved' | 'denied',
   adminNotes?: string
 ) {
-  const { supabase, user } = await getAdminOrManagerClient()
+  // Only admins can resolve pay requests
+  const { supabase, user } = await getAdminClient()
+
+  // Require notes when denying
+  if (decision === 'denied' && (!adminNotes || adminNotes.trim().length < 5)) {
+    return { error: 'A reason is required when denying a pay request.' }
+  }
 
   const { error } = await supabase
     .from('pay_change_requests')
@@ -50,3 +56,4 @@ export async function resolvePayChangeRequest(
   revalidatePath('/admin/pay')
   return { success: true }
 }
+

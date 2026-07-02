@@ -22,7 +22,6 @@ export default async function DashboardPage() {
   const supabase = await createServerClient()
 
   const role = user.app_metadata?.role || 'moderator'
-  const isManager = role === 'manager'
   const isManagerOrAdmin = role === 'admin' || role === 'manager'
 
   const campaignCountPromise = isManagerOrAdmin
@@ -34,7 +33,8 @@ export default async function DashboardPage() {
         .select('*', { count: 'exact', head: true })
         .eq('moderator_id', user.id)
 
-  const shiftsQuery = isManager
+  // Admins/managers see all shifts; moderators see only their own
+  const shiftsQuery = isManagerOrAdmin
     ? supabase
         .from("shifts")
         .select("id, clock_in, clock_out, total_active_time, total_break_time, status, summary")
@@ -45,20 +45,14 @@ export default async function DashboardPage() {
         .eq("user_id", user.id)
         .order("clock_in", { ascending: false })
 
-  const activeShiftsQuery = isManager
-    ? supabase
-        .from("shifts")
-        .select("*, breaks(*)")
-        .in("status", ["active", "on_break"])
-        .order("clock_in", { ascending: false })
-        .limit(10)
-    : supabase
-        .from("shifts")
-        .select("*, breaks(*)")
-        .eq("user_id", user.id)
-        .in("status", ["active", "on_break"])
-        .order("clock_in", { ascending: false })
-        .limit(1)
+  // Active shift for the clock widget — always scoped to current user
+  const activeShiftsQuery = supabase
+    .from("shifts")
+    .select("*, breaks(*)")
+    .eq("user_id", user.id)
+    .in("status", ["active", "on_break"])
+    .order("clock_in", { ascending: false })
+    .limit(1)
 
   // Fetch profile, active shifts, and all shifts in parallel
   const [profileRes, activeShiftsRes, shiftsRes, campaignCountRes] = await Promise.all([
@@ -76,7 +70,7 @@ export default async function DashboardPage() {
   const activeShifts = activeShiftsRes.data
   const shifts = shiftsRes.data
   const campaignsCount = campaignCountRes.count || 0
-  const activeShift = !isManager && activeShifts && activeShifts.length > 0 ? activeShifts[0] : null
+  const activeShift = activeShifts && activeShifts.length > 0 ? activeShifts[0] : null
 
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
@@ -101,7 +95,7 @@ export default async function DashboardPage() {
     <div className="relative z-0 flex flex-1 flex-col gap-6 w-full pb-8">
       {/* Row 1: SectionCards and ClockWidget */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-        <div className={isManager ? "@container/main lg:col-span-3 flex flex-col" : "@container/main lg:col-span-2 order-2 lg:order-1 flex flex-col"}>
+        <div className="@container/main lg:col-span-2 order-2 lg:order-1 flex flex-col">
           <SectionCards
             totalHours={totalHours}
             completedShiftsCount={last30DaysCompletedShifts.length}
@@ -109,40 +103,35 @@ export default async function DashboardPage() {
             role={role}
           />
         </div>
-        {!isManager && (
-          <div className="lg:col-span-1 order-1 lg:order-2">
-            <ClockWidget activeShift={activeShift} />
-          </div>
-        )}
+        <div className="lg:col-span-1 order-1 lg:order-2">
+          <ClockWidget activeShift={activeShift} />
+        </div>
       </div>
 
       {/* Row 2: ChartAreaInteractive and PayWidget */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-        <div className={isManager ? "@container/main lg:col-span-3 flex flex-col" : "@container/main lg:col-span-2 flex flex-col"}>
+        <div className="@container/main lg:col-span-2 flex flex-col">
           <ChartAreaInteractive shiftsData={shifts || []} />
         </div>
-        {!isManager && (
-          <div className="lg:col-span-1 flex flex-col">
-            <PayWidget
-              monthlyRate={estimatedPay}
-              baseRate={payRate}
-              startDate={thirtyDaysAgo}
-              endDate={new Date()}
-            />
-          </div>
-        )}
+        <div className="lg:col-span-1 flex flex-col">
+          <PayWidget
+            monthlyRate={estimatedPay}
+            baseRate={payRate}
+            startDate={thirtyDaysAgo}
+            endDate={new Date()}
+          />
+        </div>
       </div>
 
       {/* Recent Shift Logs: full width column */}
-      {!isManager && (
-        <div className="bg-surface-1 border border-hairline rounded-2xl py-6 shadow-sm">
-          <div className="px-4 lg:px-6 pb-2">
-            <h3 className="text-lg font-semibold text-ink">Recent Shift Logs</h3>
-            <p className="text-sm text-ink-muted mt-0.5">List of recent logged shifts and summaries</p>
-          </div>
-          <DataTable data={shifts || []} />
+      <div className="bg-surface-1 border border-hairline rounded-2xl py-6 shadow-sm">
+        <div className="px-4 lg:px-6 pb-2">
+          <h3 className="text-lg font-semibold text-ink">Recent Shift Logs</h3>
+          <p className="text-sm text-ink-muted mt-0.5">List of recent logged shifts and summaries</p>
         </div>
-      )}
+        <DataTable data={shifts || []} />
+      </div>
     </div>
   )
 }
+

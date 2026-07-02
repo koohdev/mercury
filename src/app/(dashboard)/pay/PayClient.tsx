@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { DollarSign, ChevronDown, ChevronUp, X, Loader2, Check, Clock, AlertCircle } from 'lucide-react'
-import { submitPayChangeRequest, resolvePayChangeRequest } from '@/lib/actions/pay'
+import { DollarSign, ChevronDown, ChevronUp, X, Loader2, Check, Clock } from 'lucide-react'
+import { submitPayChangeRequest } from '@/lib/actions/pay'
 import { PayRecord, PayChangeRequest } from '@/lib/types'
 
 interface Profile {
@@ -10,17 +10,10 @@ interface Profile {
   pay_rate: number
 }
 
-interface AdminPendingRequest extends PayChangeRequest {
-  profiles?: { legal_full_name: string; email: string } | null
-  pay_records?: { period_label: string; amount: number } | null
-}
-
 interface PayClientProps {
   profile: Profile | null
   payRecords: PayRecord[]
   changeRequests: PayChangeRequest[]
-  adminPendingRequests: AdminPendingRequest[] | null
-  isAdmin: boolean
 }
 
 const formatCurrency = (amount: number) =>
@@ -36,8 +29,6 @@ export default function PayClient({
   profile,
   payRecords,
   changeRequests,
-  adminPendingRequests,
-  isAdmin,
 }: PayClientProps) {
   const [isPending, startTransition] = useTransition()
   const [showRequestModal, setShowRequestModal] = useState(false)
@@ -47,10 +38,6 @@ export default function PayClient({
   const [formError, setFormError] = useState<string | null>(null)
   const [formSuccess, setFormSuccess] = useState(false)
   const [expandedRecordId, setExpandedRecordId] = useState<string | null>(payRecords[0]?.id || null)
-
-  // Admin resolution state
-  const [adminNotes, setAdminNotes] = useState<{ [id: string]: string }>({})
-  const [resolveError, setResolveError] = useState<string | null>(null)
 
   const payRate = profile?.pay_rate || 0
   const perPeriodAmount = payRate / 2
@@ -95,13 +82,6 @@ export default function PayClient({
     })
   }
 
-  const handleResolve = (requestId: string, decision: 'approved' | 'denied') => {
-    startTransition(async () => {
-      const res = await resolvePayChangeRequest(requestId, decision, adminNotes[requestId])
-      if (res?.error) setResolveError(res.error)
-    })
-  }
-
   return (
     <div className="space-y-lg">
 
@@ -140,7 +120,7 @@ export default function PayClient({
       </p>
 
       {/* Need a different amount? Card */}
-      {!isAdmin && payRecords.length > 0 && (
+      {payRecords.length > 0 && (
         <div className="bg-surface-1 border border-hairline rounded-lg p-lg space-y-md">
           <div className="space-y-xxs">
             <h4 className="text-body font-semibold text-ink">Need a different amount?</h4>
@@ -154,77 +134,6 @@ export default function PayClient({
           >
             Request Change
           </button>
-        </div>
-      )}
-
-      {/* Admin: Needs Review Panel */}
-      {isAdmin && adminPendingRequests && adminPendingRequests.length > 0 && (
-        <div className="space-y-md">
-          <div className="flex items-center gap-xs">
-            <AlertCircle className="h-4 w-4 text-amber-400" />
-            <h3 className="text-body font-semibold text-ink">Needs Review</h3>
-            <span className="bg-amber-950/30 text-amber-400 border border-amber-900/50 text-caption font-medium px-2 py-0.5 rounded-pill">
-              {adminPendingRequests.length}
-            </span>
-          </div>
-
-          {resolveError && (
-            <div className="p-sm bg-red-950/20 border border-red-900/50 rounded-md text-body-sm text-red-400">
-              {resolveError}
-            </div>
-          )}
-
-          <div className="space-y-sm">
-            {adminPendingRequests.map((req) => (
-              <div key={req.id} className="bg-surface-1 border border-hairline rounded-lg p-lg space-y-sm">
-                <div className="flex items-start justify-between gap-md">
-                  <div className="space-y-xxs">
-                    <p className="text-body font-semibold text-ink">
-                      {(req as any).profiles?.legal_full_name || 'Unknown'}
-                    </p>
-                    <p className="text-body-sm text-ink-muted">
-                      Period: {(req as any).pay_records?.period_label || '—'} &bull; Current: {formatCurrency((req as any).pay_records?.amount || 0)}
-                    </p>
-                    <p className="text-body-sm text-ink-muted">
-                      Requested: <span className="font-semibold text-ink">{formatCurrency(req.requested_amount)}</span>
-                    </p>
-                  </div>
-                  <span className="text-caption text-ink-subtle whitespace-nowrap">{formatDate(req.created_at)}</span>
-                </div>
-
-                <div className="bg-surface-2 border border-hairline rounded-md p-sm text-body-sm text-ink-muted">
-                  <span className="font-medium text-ink-subtle text-caption uppercase tracking-wider">Reason:</span>
-                  <p className="mt-xxs">{req.reason}</p>
-                </div>
-
-                <div className="space-y-xs">
-                  <input
-                    type="text"
-                    placeholder="Admin notes (optional)"
-                    value={adminNotes[req.id] || ''}
-                    onChange={(e) => setAdminNotes((prev) => ({ ...prev, [req.id]: e.target.value }))}
-                    className="w-full bg-surface-2 text-ink text-body-sm px-sm py-1.5 rounded-md border border-hairline focus:outline-2 focus:outline-primary-focus placeholder:text-ink-subtle"
-                  />
-                  <div className="flex items-center gap-sm">
-                    <button
-                      disabled={isPending}
-                      onClick={() => handleResolve(req.id, 'approved')}
-                      className="flex-1 inline-flex items-center justify-center gap-xs bg-semantic-success/10 hover:bg-semantic-success/20 text-semantic-success border border-semantic-success/30 px-md py-1.5 rounded-md text-button font-medium transition-colors cursor-pointer disabled:opacity-50"
-                    >
-                      <Check className="h-4 w-4" /> Approve
-                    </button>
-                    <button
-                      disabled={isPending}
-                      onClick={() => handleResolve(req.id, 'denied')}
-                      className="flex-1 inline-flex items-center justify-center gap-xs bg-red-950/10 hover:bg-red-950/20 text-red-400 border border-red-900/30 px-md py-1.5 rounded-md text-button font-medium transition-colors cursor-pointer disabled:opacity-50"
-                    >
-                      <X className="h-4 w-4" /> Deny
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       )}
 
@@ -317,16 +226,14 @@ export default function PayClient({
                       </div>
                     )}
 
-                    {/* Request Change Button — only for non-admin and pending/confirmed records */}
-                    {!isAdmin && (
-                      <button
-                        onClick={() => openRequestModal(record)}
-                        className="inline-flex items-center gap-xs bg-surface-2 hover:bg-surface-3 text-ink border border-hairline px-md py-1.5 rounded-md text-button font-medium transition-colors cursor-pointer"
-                      >
-                        <Clock className="h-4 w-4" />
-                        Request Change
-                      </button>
-                    )}
+                    {/* Request Change Button */}
+                    <button
+                      onClick={() => openRequestModal(record)}
+                      className="inline-flex items-center gap-xs bg-surface-2 hover:bg-surface-3 text-ink border border-hairline px-md py-1.5 rounded-md text-button font-medium transition-colors cursor-pointer"
+                    >
+                      <Clock className="h-4 w-4" />
+                      Request Change
+                    </button>
                   </div>
                 )}
               </div>
