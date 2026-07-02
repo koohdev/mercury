@@ -1,9 +1,17 @@
 export function calculateStreak(dates: string[]): number {
   if (dates.length === 0) return 0
   const uniqueDays = Array.from(
-    new Set(dates.map((d) => new Date(d).toLocaleDateString()))
+    new Set(
+      dates.map((d) => {
+        const date = new Date(d)
+        const yyyy = date.getFullYear()
+        const mm = String(date.getMonth() + 1).padStart(2, '0')
+        const dd = String(date.getDate()).padStart(2, '0')
+        return `${yyyy}-${mm}-${dd}`
+      })
+    )
   )
-    .map((d) => new Date(d))
+    .map((d) => new Date(d + 'T00:00:00'))
     .sort((a, b) => b.getTime() - a.getTime()) // newest first
 
   let streak = 0

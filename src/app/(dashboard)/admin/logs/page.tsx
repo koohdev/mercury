@@ -20,7 +20,7 @@ export default async function AdminLogsPage({
   }
 
   const role = user.app_metadata?.role || 'moderator'
-  if (role !== 'admin') {
+  if (role !== 'admin' && role !== 'manager') {
     redirect('/dashboard')
   }
 

@@ -19,7 +19,7 @@ export default async function DashboardLayout({
 
   const supabase = await createServerClient()
   const role = user.app_metadata?.role || "moderator"
-  const isAdmin = role === "admin"
+  const isAdmin = role === "admin" || role === "manager"
 
   // Fetch completed shifts to calculate streak
   const thirtyDaysAgo = new Date()

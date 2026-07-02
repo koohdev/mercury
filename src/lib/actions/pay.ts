@@ -1,6 +1,6 @@
 'use server'
 
-import { getAuthedClient, getAdminClient } from '@/lib/supabase/server'
+import { getAuthedClient, getAdminOrManagerClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -32,7 +32,7 @@ export async function resolvePayChangeRequest(
   decision: 'approved' | 'denied',
   adminNotes?: string
 ) {
-  const { supabase, user } = await getAdminClient()
+  const { supabase, user } = await getAdminOrManagerClient()
 
   const { error } = await supabase
     .from('pay_change_requests')

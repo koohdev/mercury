@@ -1,6 +1,6 @@
 'use server'
 
-import { getAdminClient } from '@/lib/supabase/server'
+import { getAdminOrManagerClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -11,7 +11,7 @@ const CampaignSchema = z.object({
 })
 
 export async function createCampaign(rawInput: unknown) {
-  const { supabase } = await getAdminClient()
+  const { supabase } = await getAdminOrManagerClient()
 
   const result = CampaignSchema.safeParse(rawInput)
   if (!result.success) {
@@ -32,7 +32,7 @@ export async function createCampaign(rawInput: unknown) {
 }
 
 export async function updateCampaign(id: string, rawInput: unknown) {
-  const { supabase } = await getAdminClient()
+  const { supabase } = await getAdminOrManagerClient()
 
   const result = CampaignSchema.safeParse(rawInput)
   if (!result.success) {
@@ -57,7 +57,7 @@ export async function updateCampaign(id: string, rawInput: unknown) {
 }
 
 export async function deleteCampaign(id: string) {
-  const { supabase } = await getAdminClient()
+  const { supabase } = await getAdminOrManagerClient()
 
   const { error } = await supabase.from('campaigns').delete().eq('id', id)
 
@@ -69,7 +69,7 @@ export async function deleteCampaign(id: string) {
 }
 
 export async function assignModerator(campaignId: string, moderatorId: string) {
-  const { supabase, user } = await getAdminClient()
+  const { supabase, user } = await getAdminOrManagerClient()
 
   const { error } = await supabase.from('campaign_assignments').insert({
     campaign_id: campaignId,
@@ -77,7 +77,12 @@ export async function assignModerator(campaignId: string, moderatorId: string) {
     assigned_by: user.id,
   })
 
-  if (error) return { error: error.message }
+  if (error) {
+    if (error.code === '23505') {
+      return { success: true }
+    }
+    return { error: error.message }
+  }
 
   revalidatePath('/admin/campaigns')
   revalidatePath('/campaigns')
@@ -85,7 +90,7 @@ export async function assignModerator(campaignId: string, moderatorId: string) {
 }
 
 export async function unassignModerator(campaignId: string, moderatorId: string) {
-  const { supabase } = await getAdminClient()
+  const { supabase } = await getAdminOrManagerClient()
 
   const { error } = await supabase
     .from('campaign_assignments')

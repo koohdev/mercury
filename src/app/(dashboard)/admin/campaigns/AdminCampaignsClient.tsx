@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { Plus, Edit2, Trash2, Users as UsersIcon, Check, Loader2, FolderOpen } from 'lucide-react'
+import { useState, useTransition, useEffect } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { Plus, Edit2, Trash2, Users as UsersIcon, Check, Loader2, FolderOpen, Search } from 'lucide-react'
 import {
   createCampaign,
   updateCampaign,
@@ -56,9 +57,21 @@ export default function AdminCampaignsClient({
   initialAssignments,
   moderators,
 }: AdminCampaignsClientProps) {
-  const [campaigns, setCampaigns] = useState<Campaign[]>(initialCampaigns)
+  const [campaigns] = useState<Campaign[]>(initialCampaigns)
   const [assignments, setAssignments] = useState<Assignment[]>(initialAssignments)
   const [isPending, startTransition] = useTransition()
+
+  const searchParams = useSearchParams()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (searchParams.get('create') === 'true') {
+      setShowCreateModal(true)
+      const params = new URLSearchParams(searchParams.toString())
+      params.delete('create')
+      router.replace(`/admin/campaigns?${params.toString()}`, { scroll: false })
+    }
+  }, [searchParams, router])
 
   // Modal States
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -66,6 +79,9 @@ export default function AdminCampaignsClient({
   const [showAssignModal, setShowAssignModal] = useState(false)
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  // Search filter for moderators
+  const [searchModQuery, setSearchModQuery] = useState('')
 
   // Form Fields
   const [name, setName] = useState('')
@@ -156,13 +172,14 @@ export default function AdminCampaignsClient({
     setSelectedCampaign(campaign)
     setName(campaign.name)
     setDescription(campaign.description || '')
-    setStatus(campaign.status as any)
+    setStatus(campaign.status as 'active' | 'completed' | 'paused')
     setError(null)
     setShowEditModal(true)
   }
 
   const openAssign = (campaign: Campaign) => {
     setSelectedCampaign(campaign)
+    setSearchModQuery('')
     setShowAssignModal(true)
   }
 
@@ -216,23 +233,41 @@ export default function AdminCampaignsClient({
               >
                 <div className="space-y-sm">
                   <div className="flex justify-between items-start gap-xs">
-                    <h3 className="font-semibold text-body text-ink truncate" title={campaign.name}>
-                      {campaign.name}
-                    </h3>
-                    <Badge
-                      variant="outline"
-                      className={`text-[10px] uppercase font-semibold shrink-0 ${
-                        campaign.status === 'active'
-                          ? 'bg-semantic-success/15 text-semantic-success border-semantic-success/20'
-                          : campaign.status === 'completed'
-                          ? 'bg-primary/10 text-primary border-primary/20'
-                          : 'bg-amber-950/20 text-amber-400 border-amber-900/30'
-                      }`}
-                    >
-                      {campaign.status}
-                    </Badge>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold text-body text-ink truncate" title={campaign.name}>
+                        {campaign.name}
+                      </h3>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0 ml-2">
+                      <Badge
+                        variant="outline"
+                        className={`text-[10px] uppercase font-semibold shrink-0 ${
+                          campaign.status === 'active'
+                            ? 'bg-semantic-success/15 text-semantic-success border-semantic-success/20'
+                            : campaign.status === 'completed'
+                            ? 'bg-primary/10 text-primary border-primary/20'
+                            : 'bg-amber-950/20 text-amber-400 border-amber-900/30'
+                        }`}
+                      >
+                        {campaign.status}
+                      </Badge>
+                      <button
+                        onClick={() => openEdit(campaign)}
+                        className="p-1 hover:bg-surface-2 text-ink-subtle hover:text-ink rounded transition-colors cursor-pointer"
+                        title="Edit Campaign"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(campaign.id)}
+                        className="p-1 hover:bg-red-950/20 text-red-400 rounded transition-colors cursor-pointer"
+                        title="Delete Campaign"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
-                  <p className="text-body-sm text-ink-muted line-clamp-3 min-h-[3.75rem]">
+                  <p className="text-body-sm text-ink-muted line-clamp-3 min-h-15">
                     {campaign.description || 'No description provided.'}
                   </p>
 
@@ -258,30 +293,14 @@ export default function AdminCampaignsClient({
                   </div>
                 </div>
 
-                <div className="mt-md pt-sm border-t border-hairline flex items-center justify-between gap-xs">
+                <div className="mt-md pt-sm border-t border-hairline">
                   <button
                     onClick={() => openAssign(campaign)}
-                    className="flex items-center gap-xs text-[11px] font-semibold text-primary hover:text-primary-hover transition-colors bg-primary/10 hover:bg-primary/15 px-xs py-1 rounded cursor-pointer"
+                    className="w-full flex items-center justify-center gap-2 py-2 rounded-lg font-semibold text-sm transition-all border border-hairline bg-surface-1 hover:bg-surface-2 text-ink shadow-xs cursor-pointer"
                   >
-                    <UsersIcon className="w-3.5 h-3.5" /> Assign
+                    <UsersIcon className="w-4 h-4" />
+                    Assign Moderators
                   </button>
-
-                  <div className="flex items-center gap-xs">
-                    <button
-                      onClick={() => openEdit(campaign)}
-                      className="p-1 hover:bg-surface-2 text-ink-subtle hover:text-ink rounded transition-colors cursor-pointer"
-                      title="Edit Campaign"
-                    >
-                      <Edit2 className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(campaign.id)}
-                      className="p-1 hover:bg-red-950/20 text-red-400 rounded transition-colors cursor-pointer"
-                      title="Delete Campaign"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
                 </div>
               </div>
             )
@@ -334,7 +353,7 @@ export default function AdminCampaignsClient({
                 <label className="block font-medium text-caption text-ink-subtle uppercase tracking-eyebrow">
                   Status
                 </label>
-                <Select value={status} onValueChange={(val: any) => setStatus(val)}>
+                <Select value={status} onValueChange={(val) => setStatus(val as 'active' | 'completed' | 'paused')}>
                   <SelectTrigger className="bg-surface-2 mt-1 border-hairline w-full text-ink">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
@@ -411,7 +430,7 @@ export default function AdminCampaignsClient({
                 <label className="block font-medium text-caption text-ink-subtle uppercase tracking-eyebrow">
                   Status
                 </label>
-                <Select value={status} onValueChange={(val: any) => setStatus(val)}>
+                <Select value={status} onValueChange={(val) => setStatus(val as 'active' | 'completed' | 'paused')}>
                   <SelectTrigger className="bg-surface-2 mt-1 border-hairline w-full text-ink">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
@@ -456,21 +475,53 @@ export default function AdminCampaignsClient({
               </p>
             </DialogHeader>
 
+            {/* Search Input */}
+            <div className="relative mt-2">
+              <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-ink-subtle" />
+              <input
+                type="text"
+                placeholder="Search moderators by name or email..."
+                value={searchModQuery}
+                onChange={(e) => setSearchModQuery(e.target.value)}
+                className="w-full h-10 bg-surface-2 text-ink text-body-sm pl-10 pr-sm py-2 rounded-md border border-hairline focus:outline-2 focus:outline-primary-focus placeholder:text-ink-subtle transition-colors"
+              />
+            </div>
+
             <div className="space-y-sm py-md max-h-[300px] overflow-y-auto">
               {moderators.length === 0 ? (
                 <p className="text-body-sm text-ink-tertiary text-center italic py-md">
                   No active moderators found.
                 </p>
-              ) : (
-                moderators.map((moderator) => {
+              ) : (() => {
+                const filteredModerators = moderators.filter(
+                  (m) =>
+                    m.legal_full_name.toLowerCase().includes(searchModQuery.toLowerCase()) ||
+                    m.email.toLowerCase().includes(searchModQuery.toLowerCase())
+                )
+
+                if (filteredModerators.length === 0) {
+                  return (
+                    <p className="text-body-sm text-ink-tertiary text-center italic py-md">
+                      No moderators match your search.
+                    </p>
+                  )
+                }
+
+                return filteredModerators.map((moderator) => {
                   const isAssigned = assignments.some(
                     (a) => a.campaign_id === selectedCampaign.id && a.moderator_id === moderator.id
                   )
                   return (
                     <div
                       key={moderator.id}
-                      onClick={() => handleToggleAssignment(selectedCampaign.id, moderator.id, isAssigned)}
-                      className="flex items-center justify-between p-sm hover:bg-surface-2 rounded-lg border border-hairline cursor-pointer select-none transition-colors"
+                      onClick={() => {
+                        if (!isPending) {
+                          handleToggleAssignment(selectedCampaign.id, moderator.id, isAssigned)
+                        }
+                      }}
+                      className={`flex items-center justify-between p-sm hover:bg-surface-2 rounded-lg border border-hairline cursor-pointer select-none transition-colors ${
+                        isPending ? 'opacity-60 pointer-events-none' : ''
+                      }`}
                     >
                       <div>
                         <p className="text-body-sm font-semibold text-ink">{moderator.legal_full_name}</p>
@@ -489,7 +540,7 @@ export default function AdminCampaignsClient({
                     </div>
                   )
                 })
-              )}
+              })()}
             </div>
 
             <div className="flex justify-end pt-md border-hairline border-t">

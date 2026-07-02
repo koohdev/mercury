@@ -21,7 +21,7 @@ export default async function SettingsPage() {
   return (
     <SettingsClient
       profile={profile}
-      isAdmin={user.app_metadata?.role === 'admin'}
+      isAdmin={user.app_metadata?.role === 'admin' || user.app_metadata?.role === 'manager'}
     />
   )
 }

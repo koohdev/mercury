@@ -13,13 +13,13 @@ export interface AppNotification {
   created_at: string
 }
 
+const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
 export function useNotifications(userId: string, initial: AppNotification[] = []) {
   const [notifications, setNotifications] = useState<AppNotification[]>(initial)
-
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
 
   // Optimistic mark-as-read (local only, server action handles DB)
   const markRead = useCallback((id: string) => {
@@ -68,7 +68,7 @@ export function useNotifications(userId: string, initial: AppNotification[] = []
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [userId, supabase])
+  }, [userId])
 
   const unreadCount = notifications.filter((n) => !n.is_read).length
 

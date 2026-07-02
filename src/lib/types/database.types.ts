@@ -14,7 +14,7 @@ export interface Database {
           id: string
           legal_full_name: string
           email: string
-          role: 'admin' | 'moderator'
+          role: 'admin' | 'moderator' | 'manager'
           payment_method: string | null
           whop_username: string | null
           discord_username: string | null
@@ -28,7 +28,7 @@ export interface Database {
           id: string
           legal_full_name: string
           email: string
-          role?: 'admin' | 'moderator'
+          role?: 'admin' | 'moderator' | 'manager'
           payment_method?: string | null
           whop_username?: string | null
           discord_username?: string | null
@@ -42,7 +42,7 @@ export interface Database {
           id?: string
           legal_full_name?: string
           email?: string
-          role?: 'admin' | 'moderator'
+          role?: 'admin' | 'moderator' | 'manager'
           payment_method?: string | null
           whop_username?: string | null
           discord_username?: string | null

@@ -12,7 +12,7 @@ export default async function PayPage() {
   if (!user) redirect('/login')
 
   const supabase = await createServerClient()
-  const isAdmin = user.app_metadata?.role === 'admin'
+  const isAdmin = user.app_metadata?.role === 'admin' || user.app_metadata?.role === 'manager'
 
   // Fetch profile, pay records, change requests, and admin requests (if applicable) in parallel
   const [profileRes, payRecordsRes, changeRequestsRes, adminPendingRequestsRes] = await Promise.all([

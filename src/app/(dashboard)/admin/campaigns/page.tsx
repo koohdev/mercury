@@ -12,7 +12,7 @@ export default async function AdminCampaignsPage() {
   if (!user) redirect('/login')
 
   const role = user.app_metadata?.role || 'moderator'
-  if (role !== 'admin') {
+  if (role !== 'admin' && role !== 'manager') {
     redirect('/dashboard')
   }
 

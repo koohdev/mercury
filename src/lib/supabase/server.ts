@@ -56,3 +56,10 @@ export async function getAdminClient() {
   if (user.app_metadata?.role !== 'admin') throw new Error('Unauthorized')
   return { supabase, user }
 }
+
+export async function getAdminOrManagerClient() {
+  const { supabase, user } = await getAuthedClient()
+  const role = user.app_metadata?.role
+  if (role !== 'admin' && role !== 'manager') throw new Error('Unauthorized')
+  return { supabase, user }
+}

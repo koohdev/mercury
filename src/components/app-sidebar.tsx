@@ -16,8 +16,9 @@ import {
   SidebarGroupContent,
   useSidebar,
 } from "@/components/ui/sidebar"
-import Image from "next/image"
 import { NavUser } from "@/components/nav-user"
+import { User } from "@supabase/supabase-js"
+import { clockIn } from "@/lib/actions/clock"
 import {
   LayoutDashboard,
   Calendar,
@@ -27,11 +28,9 @@ import {
   CreditCard,
   Settings,
   Users,
-  Database,
-  FileBarChart2,
   HelpCircle,
-  Search,
   Briefcase,
+  Plus,
 } from "lucide-react"
 import {
   Dialog,
@@ -44,7 +43,7 @@ import {
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   isAdmin?: boolean
-  user?: any
+  user?: User
   hasActiveShift?: boolean
 }
 
@@ -52,7 +51,7 @@ export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...p
   const pathname = usePathname()
   const router = useRouter()
   const [isPending, startTransition] = React.useTransition()
-  const { isMobile, setOpenMobile } = useSidebar()
+  const { setOpenMobile } = useSidebar()
   const [showClockInConfirm, setShowClockInConfirm] = React.useState(false)
   const [isMobileOrTablet, setIsMobileOrTablet] = React.useState(false)
 
@@ -79,7 +78,6 @@ export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...p
     setShowClockInConfirm(false)
     handleLinkClick()
     startTransition(async () => {
-      const { clockIn } = await import("@/lib/actions/clock")
       const res = await clockIn()
       if (res?.error) {
         alert(res.error)
@@ -120,6 +118,16 @@ export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...p
     { name: "All Logs", href: "/admin/logs", icon: History },
   ]
 
+  const role = user?.app_metadata?.role || "moderator"
+  const isModerator = role === "moderator"
+  const visibleLinks = links.filter((link) => {
+    if (isModerator) return true
+    return ["Dashboard", "Team Schedule", "Response Templates"].includes(link.name)
+  })
+  const visibleAdminLinks = adminLinks.filter(
+    (link) => role === "admin" || (role === "manager" && link.href !== "/admin/users")
+  )
+
   const secondaryLinks = [
     { name: "Settings", href: "/settings", icon: Settings },
     { name: "Get Help", href: "#", icon: HelpCircle },
@@ -134,7 +142,8 @@ export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...p
               <SidebarMenuButton size="lg" asChild>
                 <Link href="/dashboard" className="flex items-center gap-2 px-1">
                   <div className="flex h-8 w-8 items-center justify-center shrink-0">
-                    <Image src="/logo.svg" alt="Mercury Marketing Logo" width={32} height={32} className="h-8 w-8 object-contain" />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/logo.svg" alt="Mercury Marketing Logo" width={32} height={32} className="h-8 w-8 object-contain" />
                   </div>
                   <span className="font-semibold text-lg text-ink group-data-[collapsible=icon]:hidden">Mercury Marketing</span>
                 </Link>
@@ -144,36 +153,49 @@ export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...p
         </SidebarHeader>
 
         <SidebarContent className="py-2 px-3">
-          {/* Quick Create row */}
+          {/* Quick Action row */}
           <SidebarGroup className="py-1 px-0">
             <SidebarGroupContent className="flex items-center">
               <SidebarMenu className="w-full">
                 <SidebarMenuItem className="w-full">
-                  <SidebarMenuButton
-                    tooltip={hasActiveShift ? "On Duty" : "Clock in"}
-                    onClick={handleClockInClick}
-                    disabled={isPending}
-                    className={`w-full font-medium h-9 rounded-md justify-start gap-3 px-3 transition-colors cursor-pointer disabled:opacity-50 ${
-                      hasActiveShift
-                        ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                        : "bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-hover"
-                    }`}
-                  >
-                    {hasActiveShift ? (
-                      <>
-                        <span className="relative flex h-2 w-2 shrink-0">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-                        </span>
-                        <span>On Duty</span>
-                      </>
-                    ) : (
-                      <>
-                        <Clock className="size-4 shrink-0" />
-                        <span>{isPending ? "Clocking in..." : "Clock in"}</span>
-                      </>
-                    )}
-                  </SidebarMenuButton>
+                  {isModerator ? (
+                    <SidebarMenuButton
+                      tooltip={hasActiveShift ? "On Duty" : "Clock in"}
+                      onClick={handleClockInClick}
+                      disabled={isPending}
+                      className={`w-full font-medium h-9 rounded-md justify-start gap-3 px-3 transition-colors cursor-pointer disabled:opacity-50 ${
+                        hasActiveShift
+                          ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                          : "bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-hover"
+                      }`}
+                    >
+                      {hasActiveShift ? (
+                        <>
+                          <span className="relative flex h-2 w-2 shrink-0">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                          </span>
+                          <span>On Duty</span>
+                        </>
+                      ) : (
+                        <>
+                          <Clock className="size-4 shrink-0" />
+                          <span>{isPending ? "Clocking in..." : "Clock in"}</span>
+                        </>
+                      )}
+                    </SidebarMenuButton>
+                  ) : (
+                    <SidebarMenuButton
+                      tooltip="Create Campaign"
+                      asChild
+                      className="w-full font-medium h-9 rounded-md justify-start gap-3 px-3 transition-colors cursor-pointer bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-hover"
+                    >
+                      <Link href="/admin/campaigns?create=true">
+                        <Plus className="size-4 shrink-0" />
+                        <span>Create Campaign</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  )}
                 </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
@@ -183,7 +205,7 @@ export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...p
           <SidebarGroup className="py-1 px-0">
             <SidebarGroupContent>
               <SidebarMenu className="gap-0.5">
-                {links.map((link) => {
+                {visibleLinks.map((link) => {
                   const Icon = link.icon
                   const isActive = pathname === link.href
                   return (
@@ -219,7 +241,7 @@ export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...p
               </SidebarGroupLabel>
               <SidebarGroupContent className="mt-1">
                 <SidebarMenu className="gap-0.5">
-                  {adminLinks.map((link) => {
+                  {visibleAdminLinks.map((link) => {
                     const Icon = link.icon
                     const isActive = pathname === link.href
                     return (
@@ -235,7 +257,7 @@ export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...p
                               : "text-ink-subtle hover:text-primary hover:bg-surface-2 rounded-md px-3"
                           }
                         >
-                          <Link href={link.href} className="flex items-center gap-3">
+                           <Link href={link.href} className="flex items-center gap-3">
                             <Icon className="h-4 w-4" />
                             <span>{link.name}</span>
                           </Link>

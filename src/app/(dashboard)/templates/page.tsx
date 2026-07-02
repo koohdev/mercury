@@ -16,7 +16,7 @@ export default async function TemplatesPage() {
 
   const supabase = await createServerClient()
   const role = user.app_metadata?.role || 'moderator'
-  const isAdmin = role === 'admin'
+  const isAdmin = role === 'admin' || role === 'manager'
 
   // Fetch categories and templates in parallel
   const [categoriesRes, templatesRes] = await Promise.all([

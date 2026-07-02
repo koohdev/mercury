@@ -1,6 +1,6 @@
 'use server'
 
-import { getAdminClient } from '@/lib/supabase/server'
+import { getAdminOrManagerClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -13,7 +13,7 @@ const ScheduleSchema = z.object({
 })
 
 export async function createSchedule(rawInput: unknown) {
-  const { supabase, user } = await getAdminClient()
+  const { supabase, user } = await getAdminOrManagerClient()
   const validated = ScheduleSchema.parse(rawInput)
 
   const { error } = await supabase.from('schedule_entries').insert({
@@ -32,7 +32,7 @@ export async function createSchedule(rawInput: unknown) {
 }
 
 export async function updateSchedule(id: string, rawInput: unknown) {
-  const { supabase } = await getAdminClient()
+  const { supabase } = await getAdminOrManagerClient()
   const validated = ScheduleSchema.parse(rawInput)
 
   const { error } = await supabase
@@ -53,7 +53,7 @@ export async function updateSchedule(id: string, rawInput: unknown) {
 }
 
 export async function deleteSchedule(id: string) {
-  const { supabase } = await getAdminClient()
+  const { supabase } = await getAdminOrManagerClient()
 
   const { error } = await supabase.from('schedule_entries').delete().eq('id', id)
 

@@ -9,7 +9,7 @@ const CreateUserSchema = z.object({
   email: z.string().email('Invalid email'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   legal_full_name: z.string().min(1, 'Full name is required'),
-  role: z.enum(['admin', 'moderator']),
+  role: z.enum(['admin', 'moderator', 'manager']),
   pay_rate: z.number().min(0, 'Pay rate must be 0 or higher'),
 })
 

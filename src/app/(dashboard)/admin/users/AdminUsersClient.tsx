@@ -155,7 +155,7 @@ export default function AdminUsersClient({ users: initialUsers }: AdminUsersClie
   const [newEmail, setNewEmail] = React.useState('')
   const [newPassword, setNewPassword] = React.useState('')
   const [newName, setNewName] = React.useState('')
-  const [newRole, setNewRole] = React.useState<'moderator' | 'admin'>('moderator')
+  const [newRole, setNewRole] = React.useState<'moderator' | 'admin' | 'manager'>('moderator')
   const [newPayRate, setNewPayRate] = React.useState('')
   const [createError, setCreateError] = React.useState<string | null>(null)
 
@@ -245,7 +245,11 @@ export default function AdminUsersClient({ users: initialUsers }: AdminUsersClie
           return (
             <div className="flex items-center gap-sm">
               <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 text-xs font-semibold ${
-                user.role === 'admin' ? 'bg-primary/20 text-primary' : 'bg-surface-3 text-ink-subtle'
+                user.role === 'admin'
+                  ? 'bg-primary/20 text-primary'
+                  : user.role === 'manager'
+                  ? 'bg-purple-500/20 text-purple-400'
+                  : 'bg-surface-3 text-ink-subtle'
               }`}>
                 {user.legal_full_name.charAt(0).toUpperCase()}
               </div>
@@ -268,6 +272,8 @@ export default function AdminUsersClient({ users: initialUsers }: AdminUsersClie
             <Badge variant="outline" className={`gap-1 text-xs border ${
               user.role === 'admin'
                 ? 'bg-primary/10 text-primary border-primary/20'
+                : user.role === 'manager'
+                ? 'bg-purple-950/20 text-purple-400 border-purple-900/30'
                 : 'bg-surface-2 text-ink-muted border-hairline'
             }`}>
               {user.role === 'admin' ? <ShieldCheck className="h-3 w-3" /> : <Shield className="h-3 w-3" />}
@@ -588,12 +594,13 @@ export default function AdminUsersClient({ users: initialUsers }: AdminUsersClie
               <div className="grid grid-cols-2 gap-md">
                 <div>
                   <label className={labelClass} htmlFor="newRole">Role</label>
-                  <Select value={newRole} onValueChange={(value) => setNewRole(value as 'moderator' | 'admin')}>
+                  <Select value={newRole} onValueChange={(value) => setNewRole(value as 'moderator' | 'admin' | 'manager')}>
                     <SelectTrigger id="newRole" className="w-full text-ink border-hairline bg-surface-2 mt-1">
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
                     <SelectContent className="bg-surface-2 border border-hairline text-ink">
                       <SelectItem value="moderator">Moderator</SelectItem>
+                      <SelectItem value="manager">Manager</SelectItem>
                       <SelectItem value="admin">Admin</SelectItem>
                     </SelectContent>
                   </Select>

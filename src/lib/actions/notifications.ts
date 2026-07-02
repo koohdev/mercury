@@ -1,6 +1,6 @@
 'use server'
 
-import { getAuthedClient, getAdminClient } from '@/lib/supabase/server'
+import { getAuthedClient, getAdminOrManagerClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 
@@ -29,7 +29,7 @@ export async function markAllRead() {
 }
 
 export async function sendAnnouncement(userIds: string[], title: string, message: string) {
-  await getAdminClient() // auth check only
+  await getAdminOrManagerClient() // auth check only
   const adminClient = createAdminClient()
 
   const rows = userIds.map((uid) => ({
@@ -52,6 +52,7 @@ export async function createSystemNotification(
   message: string,
   type: 'schedule_change' | 'pay_update' | 'admin_announcement'
 ) {
+  await getAdminOrManagerClient() // auth check
   const adminClient = createAdminClient()
 
   await adminClient.from('notifications').insert({

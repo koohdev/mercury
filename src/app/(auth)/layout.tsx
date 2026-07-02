@@ -28,7 +28,7 @@ export default function AuthLayout({
         }
       `}</style>
       <div 
-        className="relative flex flex-col justify-center items-center px-4 py-12 min-h-screen overflow-hidden"
+        className="dark relative flex flex-col justify-center items-center px-4 py-12 min-h-screen overflow-hidden"
         style={{
           background: 'linear-gradient(135deg, #130a1c 0%, #08040b 50%, #030105 100%)'
         }}

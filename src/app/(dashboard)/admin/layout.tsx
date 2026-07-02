@@ -3,8 +3,9 @@ import { redirect } from 'next/navigation'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const { data: { user } } = await getAuthUser()
+  const role = user?.app_metadata?.role
 
-  if (!user || user.app_metadata?.role !== 'admin') {
+  if (!user || (role !== 'admin' && role !== 'manager')) {
     redirect('/dashboard')
   }
 

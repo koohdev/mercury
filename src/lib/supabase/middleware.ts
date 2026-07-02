@@ -63,7 +63,14 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (request.nextUrl.pathname.startsWith('/admin')) {
-    if (!user || user.app_metadata?.role !== 'admin') {
+    const role = user?.app_metadata?.role
+    if (!user || (role !== 'admin' && role !== 'manager')) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/dashboard'
+      return NextResponse.redirect(url)
+    }
+
+    if (role === 'manager' && request.nextUrl.pathname.startsWith('/admin/users')) {
       const url = request.nextUrl.clone()
       url.pathname = '/dashboard'
       return NextResponse.redirect(url)

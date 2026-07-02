@@ -23,7 +23,7 @@ export default async function SchedulePage() {
   const entries = entriesRes.data
 
   const role = user.app_metadata?.role || 'moderator'
-  const isAdmin = role === 'admin'
+  const isAdmin = role === 'admin' || role === 'manager'
 
   return (
     <div className="space-y-lg">
