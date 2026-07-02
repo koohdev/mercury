@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     title: 'Mercury Marketing',
   },
   icons: {
-    icon: '/favicon-1.png',
+    icon: '/standard-favicon.png',
     apple: '/home-icon.png',
   },
   other: {
