@@ -120,9 +120,12 @@ export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...p
 
   const role = user?.app_metadata?.role || "moderator"
   const isModerator = role === "moderator"
+  const isManager = role === "manager"
   const visibleLinks = links.filter((link) => {
-    if (isModerator) return true
-    return ["Dashboard", "Team Schedule", "Response Templates"].includes(link.name)
+    if (isManager) {
+      return ["Dashboard", "Team Schedule", "Response Templates"].includes(link.name)
+    }
+    return true
   })
   const visibleAdminLinks = adminLinks.filter(
     (link) => role === "admin" || (role === "manager" && link.href !== "/admin/users")

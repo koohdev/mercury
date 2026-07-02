@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Check, Loader2, Lock, User } from 'lucide-react'
+import { Check, Loader2, Lock, User, Eye, EyeOff } from 'lucide-react'
 import { saveProfile, updatePassword } from '@/lib/actions/settings'
 import { Profile } from '@/lib/types'
 import {
@@ -57,6 +57,8 @@ export default function SettingsClient({ profile, isAdmin }: SettingsClientProps
   const [timezone, setTimezone] = useState(profile?.timezone || 'Asia/Manila')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault()
@@ -83,7 +85,14 @@ export default function SettingsClient({ profile, isAdmin }: SettingsClientProps
     startPwTransition(async () => {
       const res = await updatePassword({ newPassword, confirmPassword })
       if (res?.error) setPwError(res.error)
-      else { setPwSaved(true); setNewPassword(''); setConfirmPassword(''); setTimeout(() => setPwSaved(false), 3000) }
+      else {
+        setPwSaved(true)
+        setNewPassword('')
+        setConfirmPassword('')
+        setShowNewPassword(false)
+        setShowConfirmPassword(false)
+        setTimeout(() => setPwSaved(false), 3000)
+      }
     })
   }
 
@@ -218,15 +227,33 @@ export default function SettingsClient({ profile, isAdmin }: SettingsClientProps
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
             <div>
               <label className={labelCls} htmlFor="newPassword">New Password</label>
-              <input id="newPassword" type="password" minLength={6} required value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Min. 6 characters" className={inputCls} />
+              <div className="relative">
+                <input id="newPassword" type={showNewPassword ? "text" : "password"} minLength={6} required value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Min. 6 characters" className={`${inputCls} pr-10`} />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-subtle hover:text-ink cursor-pointer focus:outline-none"
+                >
+                  {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             <div>
               <label className={labelCls} htmlFor="confirmPassword">Confirm Password</label>
-              <input id="confirmPassword" type="password" required value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Repeat password" className={inputCls} />
+              <div className="relative">
+                <input id="confirmPassword" type={showConfirmPassword ? "text" : "password"} required value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Repeat password" className={`${inputCls} pr-10`} />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-subtle hover:text-ink cursor-pointer focus:outline-none"
+                >
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
           </div>
 

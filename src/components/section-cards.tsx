@@ -30,7 +30,7 @@ export function SectionCards({
   const isManagerOrAdmin = role === 'admin' || role === 'manager'
 
   const campaignsCardContent = (
-    <Card className={`@container/card h-full transition-all duration-150 ${isManagerOrAdmin ? 'hover:border-primary/40 hover:bg-primary/1 cursor-pointer' : ''}`}>
+    <Card className={`@container/card h-full flex flex-col justify-between transition-all duration-150 ${isManagerOrAdmin ? 'hover:border-primary/40 hover:bg-primary/1 cursor-pointer' : ''}`}>
       <CardHeader>
         <CardDescription>
           {isManagerOrAdmin ? 'Total Campaigns' : 'My Campaigns'}
@@ -45,7 +45,7 @@ export function SectionCards({
           </Badge>
         </CardAction>
       </CardHeader>
-      <CardFooter className="flex-col items-start gap-1.5 text-sm">
+      <CardFooter className="flex-col items-start gap-1.5 text-sm mt-auto w-full">
         <div className="flex gap-2 font-medium line-clamp-1">
           {isManagerOrAdmin ? 'Launch a Campaign' : 'Active tracking'}{" "}
           <TrendingUpIcon className="size-4" />
@@ -61,7 +61,7 @@ export function SectionCards({
 
   return (
     <div className="gap-4 grid grid-cols-1 @xl/main:grid-cols-3 dark:*:data-[slot=card]:bg-card *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs h-full">
-      <Card className="@container/card">
+      <Card className="@container/card h-full flex flex-col justify-between">
         <CardHeader>
           <CardDescription>Hours Logged</CardDescription>
           <CardTitle className="font-semibold tabular-nums text-2xl @[250px]/card:text-3xl">
@@ -74,7 +74,7 @@ export function SectionCards({
             </Badge>
           </CardAction>
         </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
+        <CardFooter className="flex-col items-start gap-1.5 text-sm mt-auto w-full">
           <div className="flex gap-2 font-medium line-clamp-1">
             Accumulated work hours{" "}
             <TrendingUpIcon className="size-4" />
@@ -84,7 +84,7 @@ export function SectionCards({
           </div>
         </CardFooter>
       </Card>
-      <Card className="@container/card">
+      <Card className="@container/card h-full flex flex-col justify-between">
         <CardHeader>
           <CardDescription>Completed Shifts</CardDescription>
           <CardTitle className="font-semibold tabular-nums text-2xl @[250px]/card:text-3xl">
@@ -97,7 +97,7 @@ export function SectionCards({
             </Badge>
           </CardAction>
         </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
+        <CardFooter className="flex-col items-start gap-1.5 text-sm mt-auto w-full">
           <div className="flex gap-2 font-medium line-clamp-1">
             Consistent submissions{" "}
             <TrendingUpIcon className="size-4" />

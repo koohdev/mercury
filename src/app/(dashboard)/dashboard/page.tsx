@@ -22,6 +22,7 @@ export default async function DashboardPage() {
   const supabase = await createServerClient()
 
   const role = user.app_metadata?.role || 'moderator'
+  const isManager = role === 'manager'
   const isManagerOrAdmin = role === 'admin' || role === 'manager'
 
   const campaignCountPromise = isManagerOrAdmin
@@ -33,7 +34,7 @@ export default async function DashboardPage() {
         .select('*', { count: 'exact', head: true })
         .eq('moderator_id', user.id)
 
-  const shiftsQuery = isManagerOrAdmin
+  const shiftsQuery = isManager
     ? supabase
         .from("shifts")
         .select("id, clock_in, clock_out, total_active_time, total_break_time, status, summary")
@@ -44,7 +45,7 @@ export default async function DashboardPage() {
         .eq("user_id", user.id)
         .order("clock_in", { ascending: false })
 
-  const activeShiftsQuery = isManagerOrAdmin
+  const activeShiftsQuery = isManager
     ? supabase
         .from("shifts")
         .select("*, breaks(*)")
@@ -75,7 +76,7 @@ export default async function DashboardPage() {
   const activeShifts = activeShiftsRes.data
   const shifts = shiftsRes.data
   const campaignsCount = campaignCountRes.count || 0
-  const activeShift = !isManagerOrAdmin && activeShifts && activeShifts.length > 0 ? activeShifts[0] : null
+  const activeShift = !isManager && activeShifts && activeShifts.length > 0 ? activeShifts[0] : null
 
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
@@ -100,7 +101,7 @@ export default async function DashboardPage() {
     <div className="relative z-0 flex flex-1 flex-col gap-6 w-full pb-8">
       {/* Row 1: SectionCards and ClockWidget */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-        <div className={isManagerOrAdmin ? "@container/main lg:col-span-3 flex flex-col" : "@container/main lg:col-span-2 order-2 lg:order-1 flex flex-col"}>
+        <div className={isManager ? "@container/main lg:col-span-3 flex flex-col" : "@container/main lg:col-span-2 order-2 lg:order-1 flex flex-col"}>
           <SectionCards
             totalHours={totalHours}
             completedShiftsCount={last30DaysCompletedShifts.length}
@@ -108,7 +109,7 @@ export default async function DashboardPage() {
             role={role}
           />
         </div>
-        {!isManagerOrAdmin && (
+        {!isManager && (
           <div className="lg:col-span-1 order-1 lg:order-2">
             <ClockWidget activeShift={activeShift} />
           </div>
@@ -117,10 +118,10 @@ export default async function DashboardPage() {
 
       {/* Row 2: ChartAreaInteractive and PayWidget */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-        <div className={isManagerOrAdmin ? "@container/main lg:col-span-3 flex flex-col" : "@container/main lg:col-span-2 flex flex-col"}>
+        <div className={isManager ? "@container/main lg:col-span-3 flex flex-col" : "@container/main lg:col-span-2 flex flex-col"}>
           <ChartAreaInteractive shiftsData={shifts || []} />
         </div>
-        {!isManagerOrAdmin && (
+        {!isManager && (
           <div className="lg:col-span-1 flex flex-col">
             <PayWidget
               monthlyRate={estimatedPay}
@@ -133,7 +134,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Recent Shift Logs: full width column */}
-      {!isManagerOrAdmin && (
+      {!isManager && (
         <div className="bg-surface-1 border border-hairline rounded-2xl py-6 shadow-sm">
           <div className="px-4 lg:px-6 pb-2">
             <h3 className="text-lg font-semibold text-ink">Recent Shift Logs</h3>

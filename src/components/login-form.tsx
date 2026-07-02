@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { login } from "@/lib/actions/auth"
-import { Loader2 } from "lucide-react"
+import { Loader2, Eye, EyeOff } from "lucide-react"
 
 export function LoginForm({
   className,
@@ -24,6 +24,7 @@ export function LoginForm({
 }: React.ComponentProps<"div">) {
   const [error, setError] = React.useState<string | null>(null)
   const [isPending, startTransition] = React.useTransition()
+  const [showPassword, setShowPassword] = React.useState(false)
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -64,13 +65,22 @@ export function LoginForm({
               </Field>
               <Field>
                 <FieldLabel htmlFor="password">Password</FieldLabel>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  className="bg-surface-2 border-hairline text-ink"
-                />
+                <div className="relative w-full">
+                  <Input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    className="bg-surface-2 border-hairline text-ink pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-subtle hover:text-ink cursor-pointer focus:outline-none"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </Field>
               <Field>
                 <Button type="submit" disabled={isPending} className="w-full flex items-center justify-center gap-2 cursor-pointer bg-primary text-primary-foreground hover:bg-primary-hover">

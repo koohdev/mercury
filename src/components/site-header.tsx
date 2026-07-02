@@ -50,7 +50,7 @@ export function SiteHeader({ user, streakCount, initialNotifications }: SiteHead
         <SidebarTrigger className="-ml-1 text-ink-subtle hover:text-ink cursor-pointer" />
         <Separator
           orientation="vertical"
-          className="mx-2 data-[orientation=vertical]:h-4 data-[orientation=vertical]:self-stretch bg-hairline"
+          className="mx-3 h-4! self-center! bg-hairline"
         />
         <h2 className="text-body font-medium tracking-subhead text-ink">
           {getPageTitle(pathname)}

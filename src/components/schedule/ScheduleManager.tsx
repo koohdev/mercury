@@ -72,7 +72,7 @@ export default function ScheduleManager({
   isAdmin,
 }: ScheduleManagerProps) {
   const [currentDate, setCurrentDate] = useState(() => new Date())
-  const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month')
+  const [viewMode, setViewMode] = useState<'month' | 'week' | 'day' | 'timeline'>('month')
   const [isPending, startTransition] = useTransition()
 
   // Modal states
@@ -144,6 +144,7 @@ export default function ScheduleManager({
       rangeStart = startOfWeek.getTime()
       rangeEnd = endOfWeek.getTime()
     } else {
+      // timeline or day view
       rangeStart = startOfDay.getTime()
       rangeEnd = endOfDay.getTime()
     }
@@ -166,10 +167,10 @@ export default function ScheduleManager({
         month: 'long',
         year: 'numeric',
       })
-    } else if (viewMode === 'day') {
+    } else if (viewMode === 'day' || viewMode === 'timeline') {
       return currentDate.toLocaleDateString('en-US', {
-        weekday: 'short',
-        month: 'short',
+        weekday: 'long',
+        month: 'long',
         day: 'numeric',
         year: 'numeric',
       })
@@ -393,6 +394,14 @@ export default function ScheduleManager({
               >
                 Day
               </button>
+              <button
+                onClick={() => setViewMode('timeline')}
+                className={`flex-1 sm:flex-initial text-center px-sm py-1.5 rounded-sm text-caption font-medium transition-colors cursor-pointer ${
+                  viewMode === 'timeline' ? 'bg-surface-3 text-ink' : 'text-ink-subtle hover:text-ink'
+                }`}
+              >
+                Timeline
+              </button>
             </div>
 
             {/* Navigation Controls */}
@@ -512,8 +521,10 @@ export default function ScheduleManager({
                             openEditModal(shift)
                           }
                         }}
-                        style={{ borderLeftColor: shift.color || '#5e6ad2' }}
-                        className="text-[9px] leading-tight p-xxs border-l-2 bg-surface-2 text-ink rounded-sm truncate"
+                        style={{
+                          backgroundColor: `${shift.color || '#5e6ad2'}1a`
+                        }}
+                        className="text-[9px] leading-tight px-1.5 py-0.5 text-ink rounded-sm truncate"
                       >
                         <span className="font-semibold">{getUserName(shift.user_id)}</span> {shift.label || 'Coverage'}
                       </div>
@@ -583,9 +594,11 @@ export default function ScheduleManager({
                                 openEditModal(shift)
                               }
                             }}
-                            style={{ borderColor: shift.color || '#5e6ad2' }}
-                            className={`p-xs rounded-sm border-l-4 bg-surface-2 text-left space-y-xxs transition-colors text-caption ${
-                              isAdmin ? 'hover:bg-surface-3 cursor-pointer' : ''
+                            style={{
+                              backgroundColor: `${shift.color || '#5e6ad2'}1a`
+                            }}
+                            className={`p-xs rounded-md text-left space-y-xxs transition-all text-caption ${
+                              isAdmin ? 'hover:bg-surface-3/50 hover:translate-x-0.5 cursor-pointer' : ''
                             } ${isCurrentUser ? 'outline-1 outline-primary/40 ring-1 ring-primary/40' : ''}`}
                           >
                             <div className="flex justify-between items-center gap-xxs">
@@ -614,6 +627,123 @@ export default function ScheduleManager({
                 </div>
               )
             })}
+          </div>
+        </div>
+      )}
+
+      {viewMode === 'timeline' && (
+        <div className="border border-hairline rounded-lg bg-surface-1 overflow-hidden shadow-sm relative">
+          <div className="overflow-x-auto">
+            <div className="min-w-[2080px] divide-y divide-hairline relative">
+              {/* Current Time Indicator Line */}
+              {currentDate.toDateString() === new Date().toDateString() && (
+                <div
+                  style={{
+                    left: `calc(160px + ${(new Date().getHours() + new Date().getMinutes() / 60) * 80}px)`
+                  }}
+                  className="absolute top-0 bottom-0 w-[1.5px] bg-primary z-30 pointer-events-none flex flex-col items-center"
+                >
+                  <div className="w-2.5 h-2.5 rounded-full bg-primary -mt-1 shadow-sm" />
+                </div>
+              )}
+
+              {/* Header row */}
+              <div className="grid grid-cols-[160px_repeat(24,80px)] bg-surface-2 divide-x divide-hairline border-b border-hairline">
+                <div className="p-sm text-caption font-semibold text-ink-subtle uppercase tracking-wider sticky left-0 bg-surface-2 z-20 border-r border-hairline shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
+                  Team Member
+                </div>
+                {Array.from({ length: 24 }).map((_, h) => {
+                  const label = h === 0 ? '12 AM' : h === 12 ? '12 PM' : h < 12 ? `${h} AM` : `${h - 12} PM`
+                  return (
+                    <div key={h} className="p-sm text-center flex flex-col items-center justify-center text-[10px] font-semibold text-ink-subtle uppercase tracking-wider">
+                      {label}
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Data rows */}
+              {profiles.length > 0 ? (
+                profiles.map((profile) => {
+                  const userShifts = entriesInView.filter((entry) => entry.user_id === profile.id)
+
+                  return (
+                    <div key={profile.id} className="grid grid-cols-[160px_repeat(24,80px)] grid-rows-1 divide-x divide-hairline hover:bg-surface-2/30 transition-colors relative items-center min-h-[64px]">
+                      {/* Left sticky column */}
+                      <div className="p-sm flex flex-col justify-center sticky left-0 bg-surface-1 border-r border-hairline z-20 shadow-[2px_0_5px_rgba(0,0,0,0.02)] h-full grid-row-start-1 grid-column-start-1">
+                        <span className="font-semibold text-body-sm text-ink truncate max-w-[140px]">
+                          {profile.legal_full_name}
+                        </span>
+                        <span className="text-[10px] text-ink-subtle uppercase tracking-wider mt-xxs">
+                          {profile.role}
+                        </span>
+                      </div>
+
+                      {/* Day cells background slots */}
+                      {Array.from({ length: 24 }).map((_, h) => (
+                        <div
+                          key={h}
+                          style={{ gridColumnStart: h + 2, gridRowStart: 1 }}
+                          className="h-full border-r border-hairline/20 bg-transparent z-0"
+                        />
+                      ))}
+
+                      {/* Shifts overlay */}
+                      {userShifts.map((shift) => {
+                        const startLocal = new Date(shift.start_time)
+                        const endLocal = new Date(shift.end_time)
+                        
+                        const startHr = startLocal.toDateString() === currentDate.toDateString() ? startLocal.getHours() : 0
+                        const endHr = endLocal.toDateString() === currentDate.toDateString() ? Math.ceil(endLocal.getHours() + endLocal.getMinutes() / 60) : 24
+                        
+                        const S = Math.max(0, Math.min(23, startHr))
+                        const E = Math.max(S + 1, Math.min(24, endHr))
+
+                        const isCurrentUser = shift.user_id === currentUser.id
+
+                        return (
+                          <div
+                            key={shift.id}
+                            onClick={() => isAdmin && openEditModal(shift)}
+                            style={{
+                              gridColumnStart: S + 2,
+                              gridColumnEnd: E + 2,
+                              gridRowStart: 1,
+                              backgroundColor: `${shift.color || '#5e6ad2'}12`,
+                              borderColor: `${shift.color || '#5e6ad2'}40`
+                            }}
+                            className={`mx-1.5 my-2 px-sm rounded-lg border text-left flex items-center justify-between transition-all duration-150 z-10 hover:shadow-xs min-h-[38px] ${
+                              isAdmin ? 'hover:bg-surface-3/30 cursor-pointer' : ''
+                            }`}
+                          >
+                            <div className="flex items-center gap-xs truncate">
+                              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: shift.color || '#5e6ad2' }} />
+                              <span className="font-semibold text-ink text-[10px] truncate">
+                                {shift.label || 'Coverage'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-xs shrink-0 pl-xs">
+                              <span className="font-mono text-[9px] text-ink-subtle">
+                                {formatTimeRange(shift.start_time, shift.end_time)}
+                              </span>
+                              {isCurrentUser && (
+                                <span className="bg-primary/10 text-primary border border-primary/20 px-1 rounded-sm text-[7px] font-medium">
+                                  You
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )
+                })
+              ) : (
+                <div className="p-lg text-center text-body-sm text-ink-subtle italic col-span-25">
+                  No moderators registered.
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
