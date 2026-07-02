@@ -3,7 +3,8 @@ import { cookies } from 'next/headers'
 import { Database } from '../types/database.types'
 import { cache } from 'react'
 
-export async function createServerClient() {
+// ponytail: cache the client to reuse it across layout.tsx, page.tsx, and middleware/actions in a single request
+export const createServerClient = cache(async () => {
   const cookieStore = await cookies()
   return createSsrServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -25,24 +26,30 @@ export async function createServerClient() {
       },
     }
   )
-}
+})
 
 export const getAuthUser = cache(async () => {
   const supabase = await createServerClient()
   return await supabase.auth.getUser()
 })
 
+// ponytail: cache profile fetch to prevent repeating database queries across layout and page renders
+export const getAuthProfile = cache(async (userId: string) => {
+  const supabase = await createServerClient()
+  return await supabase
+    .from('profiles')
+    .select('status, role, legal_full_name, pay_rate')
+    .eq('id', userId)
+    .single()
+})
+
 // ponytail: shared helpers to kill the 25x repeated auth boilerplate in server actions
 export async function getAuthedClient() {
   const supabase = await createServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('status')
-    .eq('id', user.id)
-    .single()
+  const { data: profile } = await getAuthProfile(user.id)
 
   if (profile?.status === 'deactivated') {
     throw new Error('Unauthorized')
@@ -53,13 +60,15 @@ export async function getAuthedClient() {
 
 export async function getAdminClient() {
   const { supabase, user } = await getAuthedClient()
-  if (user.app_metadata?.role !== 'admin') throw new Error('Unauthorized')
+  const { data: profile } = await getAuthProfile(user.id)
+  if (profile?.role !== 'admin') throw new Error('Unauthorized')
   return { supabase, user }
 }
 
 export async function getAdminOrManagerClient() {
   const { supabase, user } = await getAuthedClient()
-  const role = user.app_metadata?.role
+  const { data: profile } = await getAuthProfile(user.id)
+  const role = profile?.role
   if (role !== 'admin' && role !== 'manager') throw new Error('Unauthorized')
   return { supabase, user }
 }

@@ -313,7 +313,7 @@ body {
 
   /* Mobile Sidebar Safe Area Support */
   [data-sidebar="sidebar"][data-mobile="true"] {
-    padding-top: env(safe-area-inset-top);
+    padding-top: calc(env(safe-area-inset-top) + .9rem);
     padding-bottom: env(safe-area-inset-bottom);
   }
 

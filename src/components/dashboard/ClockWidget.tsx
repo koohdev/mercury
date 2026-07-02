@@ -62,14 +62,17 @@ export default function ClockWidget({ activeShift }: ClockWidgetProps) {
       return
     }
 
+    const tempSummary = summary
+    setShowSummaryModal(false)
+    setSummary('')
+    setError(null)
+
     startTransition(async () => {
-      const res = await clockOut(activeShift.id, summary)
+      const res = await clockOut(activeShift.id, tempSummary)
       if (res?.error) {
         setError(res.error)
-      } else {
-        setShowSummaryModal(false)
-        setSummary('')
-        setError(null)
+        setSummary(tempSummary)
+        setShowSummaryModal(true)
       }
     })
   }

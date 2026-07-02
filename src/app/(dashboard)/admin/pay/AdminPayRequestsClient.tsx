@@ -88,14 +88,16 @@ export default function AdminPayRequestsClient({ requests }: AdminPayRequestsCli
           <CreditCard className="h-5 w-5 text-primary" />
         </div>
         <div>
-          <h1 className="text-section-title font-semibold text-ink">Pay Requests</h1>
+          <div className="flex items-center gap-xs">
+            <h1 className="text-section-title font-semibold text-ink">Pay Requests</h1>
+            {pendingCount > 0 && (
+              <span className="bg-amber-950/30 text-amber-400 border border-amber-900/50 text-caption font-medium px-2.5 py-0.5 rounded-pill">
+                {pendingCount} pending
+              </span>
+            )}
+          </div>
           <p className="text-body-sm text-ink-muted">Review and manage pay change requests from team members.</p>
         </div>
-        {pendingCount > 0 && (
-          <span className="ml-auto bg-amber-950/30 text-amber-400 border border-amber-900/50 text-caption font-medium px-2.5 py-1 rounded-pill">
-            {pendingCount} pending
-          </span>
-        )}
       </div>
 
       {/* Filter Tabs */}
@@ -218,7 +220,7 @@ export default function AdminPayRequestsClient({ requests }: AdminPayRequestsCli
                     <button
                       disabled={isPending}
                       onClick={() => handleResolve(req.id, 'approved')}
-                      className="flex-1 inline-flex items-center justify-center gap-xs bg-semantic-success/10 hover:bg-semantic-success/20 text-semantic-success border border-semantic-success/30 px-md py-1.5 rounded-md text-button font-medium transition-colors cursor-pointer disabled:opacity-50"
+                      className="flex-1 inline-flex items-center justify-center gap-xs bg-semantic-success hover:bg-semantic-success/90 text-white rounded-md text-body-sm font-semibold transition-colors cursor-pointer disabled:opacity-50 h-10 shadow-sm"
                     >
                       {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                       Approve
@@ -226,7 +228,7 @@ export default function AdminPayRequestsClient({ requests }: AdminPayRequestsCli
                     <button
                       disabled={isPending}
                       onClick={() => handleResolve(req.id, 'denied')}
-                      className="flex-1 inline-flex items-center justify-center gap-xs bg-red-950/10 hover:bg-red-950/20 text-red-400 border border-red-900/30 px-md py-1.5 rounded-md text-button font-medium transition-colors cursor-pointer disabled:opacity-50"
+                      className="flex-1 inline-flex items-center justify-center gap-xs bg-destructive hover:bg-destructive/90 text-white rounded-md text-body-sm font-semibold transition-colors cursor-pointer disabled:opacity-50 h-10 shadow-sm"
                     >
                       {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
                       Deny

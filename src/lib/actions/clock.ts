@@ -6,26 +6,16 @@ import { revalidatePath } from 'next/cache'
 export async function clockIn() {
   const { supabase, user } = await getAuthedClient()
 
-  // 1. Pre-check for existing active or on-break shift
-  const { data: existingActive, error: checkError } = await supabase
-    .from('shifts')
-    .select('id')
-    .eq('user_id', user.id)
-    .in('status', ['active', 'on_break'])
-    .limit(1)
-
-  if (checkError) return { error: checkError.message }
-  if (existingActive && existingActive.length > 0) {
-    return { error: 'You already have an active shift or break in progress.' }
-  }
-
-  // 2. Insert new shift
+  // ponytail: insert directly and rely on the DB's unique index constraint (idx_one_active_shift_per_user) to save a select roundtrip
   const { error } = await supabase.from('shifts').insert({
     user_id: user.id,
     status: 'active',
   })
 
   if (error) {
+    if (error.code === '23505') {
+      return { error: 'You already have an active shift or break in progress.' }
+    }
     return { error: error.message }
   }
 
@@ -125,40 +115,17 @@ export async function clockOut(shiftId: string, summary: string) {
 
   const { supabase, user } = await getAuthedClient()
 
-  // 1. Verify shift ownership and status
-  const { data: shift, error: shiftError } = await supabase
-    .from('shifts')
-    .select('id, status')
-    .eq('id', shiftId)
-    .eq('user_id', user.id)
-    .single()
+  // ponytail: end active break for this shift unconditionally (if none exist, 0 rows are updated instantly)
+  const { error: breakError } = await supabase
+    .from('breaks')
+    .update({ end_time: new Date().toISOString() })
+    .eq('shift_id', shiftId)
+    .is('end_time', null)
 
-  if (shiftError || !shift) {
-    return { error: 'Shift not found or access denied.' }
-  }
-  if (shift.status === 'completed') {
-    return { error: 'Shift is already completed.' }
-  }
+  if (breakError) return { error: breakError.message }
 
-  // 2. If currently on break, end the break first
-  if (shift.status === 'on_break') {
-    const { data: activeBreaks } = await supabase
-      .from('breaks')
-      .select('id')
-      .eq('shift_id', shiftId)
-      .is('end_time', null)
-
-    if (activeBreaks && activeBreaks.length > 0) {
-      const { error: breakError } = await supabase
-        .from('breaks')
-        .update({ end_time: new Date().toISOString() })
-        .eq('id', activeBreaks[0].id)
-      if (breakError) return { error: breakError.message }
-    }
-  }
-
-  // 3. Complete shift
-  const { error } = await supabase
+  // ponytail: update shift directly; saves select roundtrips. Unique DB constraint guarantees user-ownership.
+  const { data, error } = await supabase
     .from("shifts")
     .update({
       clock_out: new Date().toISOString(),
@@ -166,8 +133,13 @@ export async function clockOut(shiftId: string, summary: string) {
       summary: summary.trim(),
     })
     .eq("id", shiftId)
+    .eq("user_id", user.id)
+    .neq("status", "completed")
+    .select("id")
+    .maybeSingle()
 
   if (error) return { error: error.message }
+  if (!data) return { error: 'Shift not found, access denied, or already completed.' }
 
   revalidatePath("/dashboard")
   return { success: true }

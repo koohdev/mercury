@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import { flushSync } from "react-dom"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 
@@ -69,9 +68,7 @@ function SidebarProvider({
   const isMobile = useIsMobile()
   const [openMobile, _setOpenMobile] = React.useState(false)
   const setOpenMobile = React.useCallback((value: boolean | ((value: boolean) => boolean)) => {
-    flushSync(() => {
-      _setOpenMobile(value)
-    })
+    _setOpenMobile(value)
   }, [])
 
   // This is the internal state of the sidebar.
@@ -81,13 +78,11 @@ function SidebarProvider({
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
       const openState = typeof value === "function" ? value(open) : value
-      flushSync(() => {
-        if (setOpenProp) {
-          setOpenProp(openState)
-        } else {
-          _setOpen(openState)
-        }
-      })
+      if (setOpenProp) {
+        setOpenProp(openState)
+      } else {
+        _setOpen(openState)
+      }
 
       // This sets the cookie to keep the sidebar state.
       document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
@@ -185,21 +180,6 @@ function Sidebar({
 }) {
   const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
 
-  if (collapsible === "none") {
-    return (
-      <div
-        data-slot="sidebar"
-        className={cn(
-          "flex h-full w-(--sidebar-width) flex-col bg-sidebar text-sidebar-foreground",
-          className
-        )}
-        {...props}
-      >
-        {children}
-      </div>
-    )
-  }
-
   // Safety net: MutationObserver to catch any stuck body locks on iOS
   React.useEffect(() => {
     if (!isMobile) return
@@ -219,6 +199,21 @@ function Sidebar({
     })
     return () => observer.disconnect()
   }, [isMobile, openMobile])
+
+  if (collapsible === "none") {
+    return (
+      <div
+        data-slot="sidebar"
+        className={cn(
+          "flex h-full w-(--sidebar-width) flex-col bg-sidebar text-sidebar-foreground",
+          className
+        )}
+        {...props}
+      >
+        {children}
+      </div>
+    )
+  }
 
   if (isMobile) {
     const handleOpenChange = (open: boolean) => {

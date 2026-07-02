@@ -445,13 +445,6 @@ export default function TemplatesClient({
         </div>
       )}
 
-      {/* Custom micro-toast at the bottom right */}
-      {copiedId && (
-        <div className="fixed bottom-6 right-6 z-50 bg-surface-3 text-ink border border-hairline-strong px-lg py-3 rounded-lg shadow-xl flex items-center gap-sm animate-fade-in-up">
-          <Check className="h-5 w-5 text-semantic-success" />
-          <span className="text-body-sm font-medium">Copied response template to clipboard!</span>
-        </div>
-      )}
     </div>
   )
 }

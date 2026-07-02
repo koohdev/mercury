@@ -19,14 +19,18 @@ export function SiteHeader({ user, streakCount, initialNotifications }: SiteHead
   const pathname = usePathname()
   const { theme, setTheme } = useTheme()
 
-  const getPageTitle = (path: string) => {
+  const getPageTitle = (path: string): React.ReactNode => {
     switch (path) {
       case "/dashboard":
         return "My Dashboard"
       case "/schedule":
         return "Team Schedule"
       case "/templates":
-        return "Response Templates"
+        return (
+          <>
+            <span className="hidden sm:inline">Response </span>Templates
+          </>
+        )
       case "/logs":
         return "My Log History"
       case "/availability":
@@ -39,8 +43,14 @@ export function SiteHeader({ user, streakCount, initialNotifications }: SiteHead
         return "User Management"
       case "/admin/logs":
         return "All Moderator Logs"
+      case "/campaigns":
+      case "/admin/campaigns":
       default:
-        return "Mercury Marketing"
+        return (
+          <>
+            Mercury<span className="hidden sm:inline"> Marketing</span>
+          </>
+        )
     }
   }
 
@@ -59,9 +69,9 @@ export function SiteHeader({ user, streakCount, initialNotifications }: SiteHead
 
       <div className="flex items-center gap-md">
         {/* Attendance Streak Badge (reddish button) */}
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-950/30 border border-red-900/60 text-red-400 text-xs font-semibold select-none shadow-sm shadow-red-950/20">
+        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-950/30 border border-red-900/60 text-red-400 text-xs font-semibold select-none shadow-sm shadow-red-950/20 whitespace-nowrap">
           <Flame className="h-3.5 w-3.5 fill-red-400/20" />
-          <span>{streakCount} {streakCount === 1 ? 'Day' : 'Days'}</span>
+          <span className="whitespace-nowrap">{streakCount} {streakCount === 1 ? 'Day' : 'Days'}</span>
         </div>
 
         {/* Theme Toggle Button next to Notification Bell */}
@@ -70,7 +80,7 @@ export function SiteHeader({ user, streakCount, initialNotifications }: SiteHead
           data-variant="ghost"
           data-size="icon"
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 group/toggle extend-touch-target size-8 cursor-pointer"
+          className="hidden md:inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 group/toggle extend-touch-target size-8 cursor-pointer"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
