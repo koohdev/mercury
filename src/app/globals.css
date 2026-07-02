@@ -182,6 +182,7 @@ body {
 }
 
 :root {
+  color-scheme: light;
   --canvas: #FAFAFA;
   --surface-1: #FFFFFF;
   --surface-2: #F3F4F6;
@@ -236,6 +237,7 @@ body {
 }
 
 .dark {
+  color-scheme: dark;
   --canvas: #171717;
   --surface-1: #0A0A0A;
   --surface-2: #1E1E1E;
@@ -309,6 +311,12 @@ body {
     padding-bottom: calc(env(safe-area-inset-bottom) + 1.5rem) !important;
   }
 
+  /* Mobile Sidebar Safe Area Support */
+  [data-sidebar="sidebar"][data-mobile="true"] {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
   /* Prevent Radix UI focus/pointer lock-ups from freezing the page on mobile/Vercel */
   body {
     pointer-events: auto !important;
@@ -355,4 +363,10 @@ body {
   66% {
     transform: translate(-10px, 20px) scale(0.96);
   }
+}
+
+/* Autofill styling to ensure text remains readable in dark containers when in light mode */
+input:-webkit-autofill {
+  -webkit-text-fill-color: var(--ink) !important;
+  -webkit-box-shadow: 0 0 0 1000px var(--surface-2) inset !important;
 }

@@ -28,13 +28,13 @@ export default function AuthLayout({
         }
       `}</style>
       <div 
-        className="dark relative flex flex-col justify-center items-center px-4 py-12 min-h-screen overflow-hidden"
+        className="relative flex flex-col justify-center items-center px-4 py-12 min-h-screen overflow-hidden dark"
         style={{
           background: 'linear-gradient(135deg, #130a1c 0%, #08040b 50%, #030105 100%)'
         }}
       >
         <div 
-          className="-z-10 absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(168,85,247,0.18),transparent_50%),radial-gradient(circle_at_70%_70%,rgba(139,92,246,0.15),transparent_50%)] bg-[length:200%_200%]" 
+          className="-z-10 absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(168,85,247,0.18),transparent_50%),radial-gradient(circle_at_70%_70%,rgba(139,92,246,0.15),transparent_50%)] bg-size-[200%_200%]" 
           style={{
             animation: 'gradientMove 12s ease infinite'
           }}

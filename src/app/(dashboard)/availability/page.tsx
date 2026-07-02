@@ -21,16 +21,14 @@ export default async function AvailabilityPage() {
 
   if (isAdmin) {
     // Admin: show Members Availability with dropdown
-    const [membersRes, allAvailabilityRes, profileRes] = await Promise.all([
+    const [membersRes, profileRes] = await Promise.all([
       supabase
         .from('profiles')
         .select('id, legal_full_name, email, role, timezone')
         .in('role', ['moderator', 'manager'])
         .eq('status', 'active')
-        .order('legal_full_name', { ascending: true }),
-      supabase
-        .from('availability')
-        .select('*'),
+        .order('legal_full_name', { ascending: true })
+        .range(0, 9),
       supabase
         .from('profiles')
         .select('timezone')
@@ -38,10 +36,31 @@ export default async function AvailabilityPage() {
         .single(),
     ])
 
+    // Get total count of active moderators/managers
+    const { count: totalCountRes } = await supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .in('role', ['moderator', 'manager'])
+      .eq('status', 'active')
+
+    const initialMembers = membersRes.data || []
+    const totalCount = totalCountRes || 0
+
+    // Fetch availability only for these initial 10 members
+    const memberIds = initialMembers.map((m) => m.id)
+    let availabilityRes: { data: any[] | null } = { data: [] }
+    if (memberIds.length > 0) {
+      availabilityRes = await supabase
+        .from('availability')
+        .select('*')
+        .in('user_id', memberIds)
+    }
+
     return (
       <MembersAvailabilityClient
-        members={membersRes.data || []}
-        allAvailability={allAvailabilityRes.data || []}
+        initialMembers={initialMembers}
+        initialAvailability={availabilityRes.data || []}
+        initialTotalCount={totalCount}
         adminTimezone={profileRes.data?.timezone || 'Asia/Manila'}
       />
     )

@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Clock, Globe, Users, Search } from 'lucide-react'
 import { timeToLocal } from '@/lib/utils/timezone'
 import { Availability } from '@/lib/types'
+import { createClient } from '@/lib/supabase/client'
 
 interface MemberProfile {
   id: string
@@ -14,8 +15,9 @@ interface MemberProfile {
 }
 
 interface MembersAvailabilityClientProps {
-  members: MemberProfile[]
-  allAvailability: Availability[]
+  initialMembers: MemberProfile[]
+  initialAvailability: Availability[]
+  initialTotalCount: number
   adminTimezone: string
 }
 
@@ -36,17 +38,113 @@ const ROLE_BADGE: Record<string, string> = {
 }
 
 export default function MembersAvailabilityClient({
-  members,
-  allAvailability,
+  initialMembers,
+  initialAvailability,
+  initialTotalCount,
   adminTimezone,
 }: MembersAvailabilityClientProps) {
-  const [selectedMemberId, setSelectedMemberId] = useState<string>(members[0]?.id || '')
+  const [members, setMembers] = useState<MemberProfile[]>(initialMembers)
+  const [allAvailability, setAllAvailability] = useState<Availability[]>(initialAvailability)
+  const [totalCount, setTotalCount] = useState<number>(initialTotalCount)
+  const [selectedMemberId, setSelectedMemberId] = useState<string>(initialMembers[0]?.id || '')
   const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [loading, setLoading] = useState(false)
   const [currentTime, setCurrentTime] = useState('')
+
+  const isFirstRender = useRef(true)
 
   const selectedMember = members.find((m) => m.id === selectedMemberId)
   const memberAvailability = allAvailability.filter((a) => a.user_id === selectedMemberId)
   const memberTz = selectedMember?.timezone || adminTimezone
+
+  // Sync with initial props if they change
+  useEffect(() => {
+    setMembers(initialMembers)
+    setAllAvailability(initialAvailability)
+    setTotalCount(initialTotalCount)
+    if (initialMembers.length > 0 && !initialMembers.some(m => m.id === selectedMemberId)) {
+      setSelectedMemberId(initialMembers[0].id)
+    }
+  }, [initialMembers, initialAvailability, initialTotalCount])
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery)
+      setCurrentPage(1) // Reset to page 1 on new search query
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+  // Query paginated members + availability from database when page or search term changes
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
+
+    const fetchData = async () => {
+      setLoading(true)
+      const supabase = createClient()
+      try {
+        let query = supabase
+          .from('profiles')
+          .select('id, legal_full_name, email, role, timezone', { count: 'exact' })
+          .in('role', ['moderator', 'manager'])
+          .eq('status', 'active')
+
+        if (debouncedSearch) {
+          query = query.or(`legal_full_name.ilike.%${debouncedSearch}%,email.ilike.%${debouncedSearch}%`)
+        }
+
+        const from = (currentPage - 1) * 10
+        const to = from + 9
+
+        const { data: profiles, count, error } = await query
+          .order('legal_full_name', { ascending: true })
+          .range(from, to)
+
+        if (error) throw error
+
+        const newMembers = profiles || []
+        const newCount = count || 0
+
+        const memberIds = newMembers.map((m) => m.id)
+        let newAvail: Availability[] = []
+
+        if (memberIds.length > 0) {
+          const { data: availData, error: availError } = await supabase
+            .from('availability')
+            .select('*')
+            .in('user_id', memberIds)
+
+          if (availError) throw availError
+          newAvail = availData || []
+        }
+
+        setMembers(newMembers)
+        setTotalCount(newCount)
+        setAllAvailability(newAvail)
+
+        if (newMembers.length > 0) {
+          const stillExists = newMembers.some((m) => m.id === selectedMemberId)
+          if (!stillExists) {
+            setSelectedMemberId(newMembers[0].id)
+          }
+        } else {
+          setSelectedMemberId('')
+        }
+      } catch (err) {
+        console.error('Error fetching members availability:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [currentPage, debouncedSearch])
 
   // Local time ticker for selected member timezone
   useEffect(() => {
@@ -79,25 +177,19 @@ export default function MembersAvailabilityClient({
     }
   }
 
-  const filteredMembers = members.filter((m) =>
-    m.legal_full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    m.email.toLowerCase().includes(searchQuery.toLowerCase())
-  )
-
-  if (members.length === 0) {
-    return (
-      <div className="space-y-lg w-full">
-        <div className="text-center py-xl border border-dashed border-hairline rounded-lg bg-surface-1">
-          <Users className="h-8 w-8 text-ink-subtle mx-auto mb-sm" />
-          <p className="text-ink-subtle text-body-sm">No team members found.</p>
-        </div>
-      </div>
-    )
-  }
+  // Filtered members list represents current paginated members loaded from backend
+  const filteredMembers = members
 
   // Visual sub-render of Availability Details
   const renderAvailabilityDetails = () => {
-    if (!selectedMember) return null
+    if (!selectedMember) {
+      return (
+        <div className="text-center py-xl border border-dashed border-hairline rounded-2xl bg-surface-1">
+          <Users className="h-8 w-8 text-ink-subtle mx-auto mb-sm animate-pulse-slow" />
+          <p className="text-ink-subtle text-body-sm font-medium">Select a team member to view availability</p>
+        </div>
+      )
+    }
 
     return (
       <div className="space-y-md">
@@ -150,11 +242,6 @@ export default function MembersAvailabilityClient({
                     : 'bg-surface-1/40 border-hairline opacity-60'
                 }`}
               >
-                {/* Visual Accent for available cards */}
-                {isAvailable && (
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-primary/20" />
-                )}
-
                 {/* Day & Status Row */}
                 <div className="flex items-center justify-between">
                   <span className="text-body-sm font-semibold text-ink">{label}</span>
@@ -197,7 +284,7 @@ export default function MembersAvailabilityClient({
       <div className="lg:hidden flex flex-col gap-sm">
         <div className="flex items-center justify-between">
           <label className="text-caption font-semibold text-ink-subtle uppercase tracking-wider">
-            Select Team Member ({filteredMembers.length})
+            Select Team Member ({totalCount})
           </label>
         </div>
         <div className="relative space-y-sm">
@@ -214,7 +301,7 @@ export default function MembersAvailabilityClient({
           </div>
 
           {/* Horizontal scroll avatar list */}
-          <div className="flex gap-sm overflow-x-auto pb-xs scrollbar-thin snap-x">
+          <div className={`flex gap-sm overflow-x-auto pt-1 px-1 pb-xs scrollbar-thin snap-x transition-opacity duration-150 ${loading ? 'opacity-50' : 'opacity-100'}`}>
             {filteredMembers.map((member) => {
               const isSelected = member.id === selectedMemberId
               const initials = member.legal_full_name
@@ -248,10 +335,33 @@ export default function MembersAvailabilityClient({
                 </button>
               )
             })}
-            {filteredMembers.length === 0 && (
+            {filteredMembers.length === 0 && !loading && (
               <p className="text-caption text-ink-subtle italic py-xs">No team members match search</p>
             )}
           </div>
+
+          {/* Mobile Pagination controls */}
+          {totalCount > 10 && (
+            <div className="flex items-center justify-between py-xs px-1 border-t border-hairline">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1 || loading}
+                className="px-2.5 py-1 text-[11px] font-semibold rounded-md bg-surface-2 border border-hairline hover:bg-surface-3 disabled:opacity-50 disabled:pointer-events-none transition-colors cursor-pointer"
+              >
+                Prev
+              </button>
+              <span className="text-[11px] text-ink-muted">
+                Page {currentPage} of {Math.ceil(totalCount / 10)} ({totalCount} total)
+              </span>
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(Math.ceil(totalCount / 10), p + 1))}
+                disabled={currentPage === Math.ceil(totalCount / 10) || loading}
+                className="px-2.5 py-1 text-[11px] font-semibold rounded-md bg-surface-2 border border-hairline hover:bg-surface-3 disabled:opacity-50 disabled:pointer-events-none transition-colors cursor-pointer"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Selected Member availability for Mobile */}
@@ -266,7 +376,7 @@ export default function MembersAvailabilityClient({
         <div className="lg:col-span-4 bg-surface-1 border border-hairline rounded-2xl p-md space-y-md shadow-xs">
           <div>
             <h3 className="text-body font-semibold text-ink">Team Members</h3>
-            <p className="text-caption text-ink-muted mt-xxs">Select a member to view availability</p>
+            <p className="text-caption text-ink-muted mt-xxs">Select a member ({totalCount} total)</p>
           </div>
           {/* Search bar */}
           <div className="relative w-full">
@@ -280,7 +390,7 @@ export default function MembersAvailabilityClient({
             />
           </div>
           {/* Members list */}
-          <div className="space-y-xs max-h-[500px] overflow-y-auto pr-xs">
+          <div className={`space-y-xs max-h-[500px] overflow-y-auto pr-xs transition-opacity duration-150 ${loading ? 'opacity-50' : 'opacity-100'}`}>
             {filteredMembers.map((member) => {
               const isSelected = member.id === selectedMemberId
               const initials = member.legal_full_name
@@ -322,10 +432,33 @@ export default function MembersAvailabilityClient({
                 </button>
               )
             })}
-            {filteredMembers.length === 0 && (
+            {filteredMembers.length === 0 && !loading && (
               <p className="text-caption text-ink-subtle italic text-center py-md">No members found</p>
             )}
           </div>
+
+          {/* Desktop Pagination controls */}
+          {totalCount > 10 && (
+            <div className="flex items-center justify-between pt-md border-t border-hairline">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1 || loading}
+                className="px-3 py-1.5 text-caption font-medium rounded-md bg-surface-2 border border-hairline hover:bg-surface-3 disabled:opacity-50 disabled:pointer-events-none transition-colors cursor-pointer"
+              >
+                Previous
+              </button>
+              <span className="text-caption text-ink-muted">
+                Page {currentPage} of {Math.ceil(totalCount / 10)}
+              </span>
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(Math.ceil(totalCount / 10), p + 1))}
+                disabled={currentPage === Math.ceil(totalCount / 10) || loading}
+                className="px-3 py-1.5 text-caption font-medium rounded-md bg-surface-2 border border-hairline hover:bg-surface-3 disabled:opacity-50 disabled:pointer-events-none transition-colors cursor-pointer"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Right Column: Availability Grid */}

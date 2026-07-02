@@ -66,6 +66,7 @@ export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...p
 
   // Clean up any stuck Radix body locks/pointer-events on page navigation
   React.useEffect(() => {
+    setOpenMobile(false)
     document.body.style.pointerEvents = ""
     document.body.style.overflow = ""
     document.body.style.removeProperty("pointer-events")
@@ -79,18 +80,17 @@ export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...p
       document.body.style.removeProperty("overflow")
       document.body.removeAttribute("data-scroll-locked")
     }
-  }, [pathname])
+  }, [pathname, setOpenMobile])
 
   const handleLinkClick = (e?: React.MouseEvent<HTMLAnchorElement>, href?: string) => {
-    if (e && href && isMobileOrTablet && e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey && href !== "#") {
+    if (e && href === "#") {
       e.preventDefault()
-      setOpenMobile(false)
-      setTimeout(() => {
-        router.push(href)
-      }, 100)
-    } else {
-      setOpenMobile(false)
     }
+    
+    // Close the mobile sidebar after a short delay to let the browser process the natural link click
+    setTimeout(() => {
+      setOpenMobile(false)
+    }, 120)
   }
 
   const triggerClockIn = () => {

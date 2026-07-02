@@ -30,7 +30,7 @@ export function SiteHeader({ user, streakCount, initialNotifications }: SiteHead
       case "/logs":
         return "My Log History"
       case "/availability":
-        return "My Availability"
+        return user?.app_metadata?.role === "admin" ? "Members Availability" : "My Availability"
       case "/pay":
         return "My Pay"
       case "/settings":
@@ -47,7 +47,7 @@ export function SiteHeader({ user, streakCount, initialNotifications }: SiteHead
   return (
     <header className="flex h-(--header-height) shrink-0 items-center justify-between border-b border-hairline bg-transparent px-4 lg:px-6 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
       <div className="flex items-center gap-1 lg:gap-2">
-        <SidebarTrigger className="-ml-1 text-ink-subtle hover:text-ink cursor-pointer" />
+        <SidebarTrigger className="-ml-1 text-ink-subtle hover:text-ink cursor-pointer relative after:absolute after:-inset-2 size-8" />
         <Separator
           orientation="vertical"
           className="mx-3 h-4! self-center! bg-hairline"
