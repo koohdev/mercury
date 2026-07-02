@@ -232,15 +232,7 @@ function Sidebar({
     }
 
     return (
-      <Sheet open={openMobile} onOpenChange={handleOpenChange} modal={false} {...props}>
-        {/* Manual overlay since modal={false} disables Radix's built-in overlay */}
-        {openMobile && (
-          <div
-            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs animate-in fade-in-0 duration-200"
-            onClick={() => handleOpenChange(false)}
-            aria-hidden="true"
-          />
-        )}
+      <Sheet open={openMobile} onOpenChange={handleOpenChange} modal={true} {...props}>
         <SheetContent
           dir={dir}
           data-sidebar="sidebar"
