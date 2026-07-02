@@ -68,15 +68,23 @@ export default async function DashboardLayout({
       >
         <div className="flex min-h-screen w-full bg-canvas text-ink">
           <AppSidebar isAdmin={isAdmin} user={user} hasActiveShift={hasActiveShift} />
-          <SidebarInset className="flex flex-1 flex-col overflow-hidden bg-surface-1 sm:rounded-2xl rounded-none sm:m-4 m-0 sm:border border-0 border-hairline">
-            <SiteHeader
-              user={user}
-              streakCount={streakCount}
-              initialNotifications={notifications || []}
-            />
-            <main className="@container/main-viewport flex-1 overflow-y-auto pt-4 px-4 min-[440px]:px-8 pb-8 sm:p-lg md:p-xl">
-              {children}
-            </main>
+          <SidebarInset className="relative flex flex-1 flex-col overflow-hidden bg-surface-1 sm:rounded-2xl rounded-none sm:m-4 m-0 sm:border border-0 border-hairline">
+            {/* Subtle purple gradient background blobs scoped only to SidebarInset */}
+            <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden rounded-none sm:rounded-2xl">
+              <div className="absolute -top-40 -left-40 w-[32rem] h-[32rem] bg-purple-500/15 dark:bg-purple-600/20 rounded-full blur-[120px]" />
+              <div className="absolute top-1/3 -right-40 w-[36rem] h-[36rem] bg-purple-500/10 dark:bg-purple-700/15 rounded-full blur-[140px]" />
+            </div>
+
+            <div className="relative z-10 flex flex-col flex-1 overflow-hidden">
+              <SiteHeader
+                user={user}
+                streakCount={streakCount}
+                initialNotifications={notifications || []}
+              />
+              <main className="@container/main-viewport flex-1 overflow-y-auto pt-4 px-4 min-[440px]:px-8 pb-8 sm:p-lg md:p-xl">
+                {children}
+              </main>
+            </div>
           </SidebarInset>
         </div>
       </SidebarProvider>
