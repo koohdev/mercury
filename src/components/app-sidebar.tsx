@@ -70,8 +70,16 @@ export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...p
     document.body.style.overflow = ""
   }, [pathname])
 
-  const handleLinkClick = () => {
-    setOpenMobile(false)
+  const handleLinkClick = (e?: React.MouseEvent<HTMLAnchorElement>, href?: string) => {
+    if (e && href && isMobileOrTablet && e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey && href !== "#") {
+      e.preventDefault()
+      setOpenMobile(false)
+      setTimeout(() => {
+        router.push(href)
+      }, 100)
+    } else {
+      setOpenMobile(false)
+    }
   }
 
   const triggerClockIn = () => {
@@ -217,14 +225,17 @@ export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...p
                         asChild
                         isActive={isActive}
                         tooltip={link.name}
-                        onClick={handleLinkClick}
                         className={
                           isActive
                             ? "bg-surface-2 text-primary font-medium rounded-md px-3"
                             : "text-ink-subtle hover:text-primary hover:bg-surface-2 rounded-md px-3"
                         }
                       >
-                        <Link href={link.href} className="flex items-center gap-3">
+                        <Link 
+                          href={link.href} 
+                          onClick={(e) => handleLinkClick(e, link.href)}
+                          className="flex items-center gap-3"
+                        >
                           <Icon className="h-4 w-4 shrink-0 pointer-events-none" />
                           <span>{link.name}</span>
                         </Link>
@@ -253,14 +264,17 @@ export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...p
                           asChild
                           isActive={isActive}
                           tooltip={link.name}
-                          onClick={handleLinkClick}
                           className={
                             isActive
                               ? "bg-surface-2 text-primary font-medium rounded-md px-3"
                               : "text-ink-subtle hover:text-primary hover:bg-surface-2 rounded-md px-3"
                           }
                         >
-                           <Link href={link.href} className="flex items-center gap-3">
+                           <Link 
+                            href={link.href} 
+                            onClick={(e) => handleLinkClick(e, link.href)}
+                            className="flex items-center gap-3"
+                          >
                             <Icon className="h-4 w-4 shrink-0 pointer-events-none" />
                             <span>{link.name}</span>
                           </Link>
@@ -286,14 +300,17 @@ export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...p
                         asChild
                         isActive={isActive}
                         tooltip={link.name}
-                        onClick={handleLinkClick}
                         className={
                           isActive
                             ? "bg-surface-2 text-primary font-medium rounded-md px-3"
                             : "text-ink-subtle hover:text-primary hover:bg-surface-2 rounded-md px-3"
                         }
                       >
-                        <Link href={link.href} className="flex items-center gap-3">
+                        <Link 
+                          href={link.href} 
+                          onClick={(e) => handleLinkClick(e, link.href)}
+                          className="flex items-center gap-3"
+                        >
                           <Icon className="h-4 w-4 shrink-0 pointer-events-none" />
                           <span>{link.name}</span>
                         </Link>
