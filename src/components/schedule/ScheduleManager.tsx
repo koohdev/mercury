@@ -634,12 +634,12 @@ export default function ScheduleManager({
       {viewMode === 'timeline' && (
         <div className="border border-hairline rounded-lg bg-surface-1 overflow-hidden shadow-sm relative">
           <div className="overflow-x-auto">
-            <div className="min-w-[2080px] divide-y divide-hairline relative">
+            <div className="min-w-[1920px] divide-y divide-hairline relative">
               {/* Current Time Indicator Line */}
               {currentDate.toDateString() === new Date().toDateString() && (
                 <div
                   style={{
-                    left: `calc(160px + ${(new Date().getHours() + new Date().getMinutes() / 60) * 80}px)`
+                    left: `${(new Date().getHours() + new Date().getMinutes() / 60) * 80}px`
                   }}
                   className="absolute top-0 bottom-0 w-[1.5px] bg-primary z-30 pointer-events-none flex flex-col items-center"
                 >
@@ -648,10 +648,7 @@ export default function ScheduleManager({
               )}
 
               {/* Header row */}
-              <div className="grid grid-cols-[160px_repeat(24,80px)] bg-surface-2 divide-x divide-hairline border-b border-hairline">
-                <div className="p-sm text-caption font-semibold text-ink-subtle uppercase tracking-wider sticky left-0 bg-surface-2 z-20 border-r border-hairline shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
-                  Team Member
-                </div>
+              <div className="grid grid-cols-[repeat(24,80px)] bg-surface-2 divide-x divide-hairline border-b border-hairline">
                 {Array.from({ length: 24 }).map((_, h) => {
                   const label = h === 0 ? '12 AM' : h === 12 ? '12 PM' : h < 12 ? `${h} AM` : `${h - 12} PM`
                   return (
@@ -668,22 +665,12 @@ export default function ScheduleManager({
                   const userShifts = entriesInView.filter((entry) => entry.user_id === profile.id)
 
                   return (
-                    <div key={profile.id} className="grid grid-cols-[160px_repeat(24,80px)] grid-rows-1 divide-x divide-hairline hover:bg-surface-2/30 transition-colors relative items-center min-h-[64px]">
-                      {/* Left sticky column */}
-                      <div className="p-sm flex flex-col justify-center sticky left-0 bg-surface-1 border-r border-hairline z-20 shadow-[2px_0_5px_rgba(0,0,0,0.02)] h-full grid-row-start-1 grid-column-start-1">
-                        <span className="font-semibold text-body-sm text-ink truncate max-w-[140px]">
-                          {profile.legal_full_name}
-                        </span>
-                        <span className="text-[10px] text-ink-subtle uppercase tracking-wider mt-xxs">
-                          {profile.role}
-                        </span>
-                      </div>
-
+                    <div key={profile.id} className="grid grid-cols-[repeat(24,80px)] grid-rows-1 divide-x divide-hairline hover:bg-surface-2/30 transition-colors relative items-center min-h-[56px]">
                       {/* Day cells background slots */}
                       {Array.from({ length: 24 }).map((_, h) => (
                         <div
                           key={h}
-                          style={{ gridColumnStart: h + 2, gridRowStart: 1 }}
+                          style={{ gridColumnStart: h + 1, gridRowStart: 1 }}
                           className="h-full border-r border-hairline/20 bg-transparent z-0"
                         />
                       ))}
@@ -706,8 +693,8 @@ export default function ScheduleManager({
                             key={shift.id}
                             onClick={() => isAdmin && openEditModal(shift)}
                             style={{
-                              gridColumnStart: S + 2,
-                              gridColumnEnd: E + 2,
+                              gridColumnStart: S + 1,
+                              gridColumnEnd: E + 1,
                               gridRowStart: 1,
                               backgroundColor: `${shift.color || '#5e6ad2'}12`,
                               borderColor: `${shift.color || '#5e6ad2'}40`
@@ -719,7 +706,7 @@ export default function ScheduleManager({
                             <div className="flex items-center gap-xs truncate">
                               <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: shift.color || '#5e6ad2' }} />
                               <span className="font-semibold text-ink text-[10px] truncate">
-                                {shift.label || 'Coverage'}
+                                <span className="text-primary font-bold">{getUserName(shift.user_id)}</span>{shift.label ? ` — ${shift.label}` : ''}
                               </span>
                             </div>
                             <div className="flex items-center gap-xs shrink-0 pl-xs">
@@ -739,7 +726,7 @@ export default function ScheduleManager({
                   )
                 })
               ) : (
-                <div className="p-lg text-center text-body-sm text-ink-subtle italic col-span-25">
+                <div className="p-lg text-center text-body-sm text-ink-subtle italic col-span-24">
                   No moderators registered.
                 </div>
               )}

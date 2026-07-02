@@ -162,15 +162,15 @@ export default function AvailabilityClient({
               </label>
 
               {/* Time Inputs */}
-              <div className={`flex flex-1 items-center gap-sm transition-opacity duration-150 ${day.isAvailable ? '' : 'opacity-40 pointer-events-none'}`}>
-                <Clock className="w-4 h-4 text-ink-subtle shrink-0" />
+              <div className={`flex flex-1 items-center gap-xs sm:gap-sm transition-opacity duration-150 ${day.isAvailable ? '' : 'opacity-40 pointer-events-none'}`}>
+                <Clock className="w-4 h-4 text-ink-subtle shrink-0 hidden sm:block" />
                 <div className="flex-1 min-w-0">
                   <input
                     type="time"
                     disabled={!day.isAvailable}
                     value={day.startTime}
                     onChange={(e) => updateTime(idx, 'startTime', e.target.value)}
-                    className="w-full bg-surface-2 px-sm py-1.5 border border-hairline rounded-md focus:outline-2 focus:outline-primary-focus text-body-sm text-ink disabled:cursor-not-allowed min-w-0"
+                    className="w-full bg-surface-2 px-2 sm:px-sm py-1.5 border border-hairline rounded-md focus:outline-2 focus:outline-primary-focus text-body-sm text-ink disabled:cursor-not-allowed min-w-0"
                   />
                 </div>
                 <span className="font-medium text-body-sm text-ink-subtle shrink-0">to</span>
@@ -180,7 +180,7 @@ export default function AvailabilityClient({
                     disabled={!day.isAvailable}
                     value={day.endTime}
                     onChange={(e) => updateTime(idx, 'endTime', e.target.value)}
-                    className="w-full bg-surface-2 px-sm py-1.5 border border-hairline rounded-md focus:outline-2 focus:outline-primary-focus text-body-sm text-ink disabled:cursor-not-allowed min-w-0"
+                    className="w-full bg-surface-2 px-2 sm:px-sm py-1.5 border border-hairline rounded-md focus:outline-2 focus:outline-primary-focus text-body-sm text-ink disabled:cursor-not-allowed min-w-0"
                   />
                 </div>
               </div>
