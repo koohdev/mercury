@@ -2,6 +2,7 @@ import { createServerClient, getAuthUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import AvailabilityClient from './AvailabilityClient'
 import MembersAvailabilityClient from './MembersAvailabilityClient'
+import { Availability } from '@/lib/types'
 
 export const metadata = {
   title: 'Availability | Mercury Marketing',
@@ -43,12 +44,16 @@ export default async function AvailabilityPage() {
       .in('role', ['moderator', 'manager'])
       .eq('status', 'active')
 
-    const initialMembers = membersRes.data || []
+    const initialMembers = (membersRes.data || []).map((m) => ({
+      ...m,
+      role: m.role as 'admin' | 'moderator' | 'manager',
+      timezone: m.timezone || 'Asia/Manila',
+    }))
     const totalCount = totalCountRes || 0
 
     // Fetch availability only for these initial 10 members
     const memberIds = initialMembers.map((m) => m.id)
-    let availabilityRes: { data: any[] | null } = { data: [] }
+    let availabilityRes: { data: Availability[] | null } = { data: [] }
     if (memberIds.length > 0) {
       availabilityRes = await supabase
         .from('availability')

@@ -76,3 +76,18 @@ export async function updateUserPayRate(userId: string, payRate: number) {
   revalidatePath('/admin/users')
   return { success: true }
 }
+
+export async function deleteUser(userId: string) {
+  const { user } = await getAdminClient() // auth check
+  if (user.id === userId) {
+    return { error: 'You cannot delete your own admin account.' }
+  }
+
+  const adminClient = createAdminClient()
+  const { error } = await adminClient.auth.admin.deleteUser(userId)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/admin/users')
+  return { success: true }
+}

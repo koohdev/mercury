@@ -7,7 +7,7 @@ import { PayRecord, PayChangeRequest } from '@/lib/types'
 
 interface Profile {
   legal_full_name: string
-  pay_rate: number
+  pay_rate: number | null
 }
 
 interface PayClientProps {

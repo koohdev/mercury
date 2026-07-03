@@ -70,7 +70,12 @@ export default async function DashboardPage() {
   const activeShifts = activeShiftsRes.data
   const shifts = shiftsRes.data
   const campaignsCount = campaignCountRes.count || 0
-  const activeShift = activeShifts && activeShifts.length > 0 ? activeShifts[0] : null
+  const activeShift = activeShifts && activeShifts.length > 0 ? {
+    id: activeShifts[0].id,
+    clock_in: activeShifts[0].clock_in,
+    status: activeShifts[0].status as 'active' | 'on_break' | 'completed',
+    breaks: activeShifts[0].breaks,
+  } : null
 
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)

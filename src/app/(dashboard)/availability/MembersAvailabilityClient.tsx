@@ -55,19 +55,25 @@ export default function MembersAvailabilityClient({
 
   const isFirstRender = useRef(true)
 
-  const selectedMember = members.find((m) => m.id === selectedMemberId)
-  const memberAvailability = allAvailability.filter((a) => a.user_id === selectedMemberId)
-  const memberTz = selectedMember?.timezone || adminTimezone
-
-  // Sync with initial props if they change
+  const selectedMemberIdRef = useRef(selectedMemberId)
   useEffect(() => {
+    selectedMemberIdRef.current = selectedMemberId
+  }, [selectedMemberId])
+
+  const [prevInitialMembers, setPrevInitialMembers] = useState(initialMembers)
+  if (initialMembers !== prevInitialMembers) {
+    setPrevInitialMembers(initialMembers)
     setMembers(initialMembers)
     setAllAvailability(initialAvailability)
     setTotalCount(initialTotalCount)
     if (initialMembers.length > 0 && !initialMembers.some(m => m.id === selectedMemberId)) {
       setSelectedMemberId(initialMembers[0].id)
     }
-  }, [initialMembers, initialAvailability, initialTotalCount])
+  }
+
+  const selectedMember = members.find((m) => m.id === selectedMemberId)
+  const memberAvailability = allAvailability.filter((a) => a.user_id === selectedMemberId)
+  const memberTz = selectedMember?.timezone || adminTimezone
 
   // Debounce search query
   useEffect(() => {
@@ -108,7 +114,11 @@ export default function MembersAvailabilityClient({
 
         if (error) throw error
 
-        const newMembers = profiles || []
+        const newMembers = (profiles || []).map((p) => ({
+          ...p,
+          role: p.role as 'admin' | 'moderator' | 'manager',
+          timezone: p.timezone || 'Asia/Manila',
+        }))
         const newCount = count || 0
 
         const memberIds = newMembers.map((m) => m.id)
@@ -129,7 +139,7 @@ export default function MembersAvailabilityClient({
         setAllAvailability(newAvail)
 
         if (newMembers.length > 0) {
-          const stillExists = newMembers.some((m) => m.id === selectedMemberId)
+          const stillExists = newMembers.some((m) => m.id === selectedMemberIdRef.current)
           if (!stillExists) {
             setSelectedMemberId(newMembers[0].id)
           }

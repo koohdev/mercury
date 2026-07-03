@@ -8,11 +8,12 @@ export const metadata = {
 
 export default async function AdminUsersPage() {
   const supabase = await createServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
   const { data: users } = await supabase
     .from('profiles')
     .select('*')
     .order('created_at', { ascending: false })
 
-  return <AdminUsersClient users={users || []} />
+  return <AdminUsersClient users={users || []} currentUserId={user?.id || ''} />
 }

@@ -30,8 +30,9 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronsRight,
+  Trash2,
 } from 'lucide-react'
-import { createUser, toggleUserStatus, updateUserPayRate } from '@/lib/actions/admin'
+import { createUser, toggleUserStatus, updateUserPayRate, deleteUser } from '@/lib/actions/admin'
 import {
   Table,
   TableBody,
@@ -58,6 +59,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 
 interface UserProfile {
   id: string
@@ -65,8 +72,8 @@ interface UserProfile {
   email: string
   role: string
   status: string
-  pay_rate: number
-  timezone: string
+  pay_rate: number | null
+  timezone: string | null
   whop_username: string | null
   discord_username: string | null
   created_at: string
@@ -74,6 +81,7 @@ interface UserProfile {
 
 interface AdminUsersClientProps {
   users: UserProfile[]
+  currentUserId: string
 }
 
 interface PayRateCellProps {
@@ -87,13 +95,13 @@ function PayRateCell({
   onSave,
   isPending,
 }: PayRateCellProps) {
-  const [val, setVal] = React.useState(String(user.pay_rate))
+  const [val, setVal] = React.useState(String(user.pay_rate ?? 0))
   const [isOpen, setIsOpen] = React.useState(false)
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open)
     if (open) {
-      setVal(String(user.pay_rate))
+      setVal(String(user.pay_rate ?? 0))
     }
   }
 
@@ -104,7 +112,7 @@ function PayRateCell({
           className="flex items-center gap-1 text-sm text-ink-muted hover:text-ink cursor-pointer bg-transparent border-0 p-0 focus:outline-hidden"
         >
           <Edit2 className="h-3 w-3" />
-          ${Number(user.pay_rate).toFixed(2)}
+          ${Number(user.pay_rate ?? 0).toFixed(2)}
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-56 p-3 bg-surface-1 border border-hairline text-ink" align="start" onClick={(e) => e.stopPropagation()}>
@@ -154,10 +162,11 @@ function PayRateCell({
   )
 }
 
-export default function AdminUsersClient({ users: initialUsers }: AdminUsersClientProps) {
+export default function AdminUsersClient({ users: initialUsers, currentUserId }: AdminUsersClientProps) {
   const [data, setData] = React.useState(() => initialUsers)
   const [isPending, startTransition] = React.useTransition()
   const [showCreateModal, setShowCreateModal] = React.useState(false)
+  const [userToDelete, setUserToDelete] = React.useState<UserProfile | null>(null)
   const [error, setError] = React.useState<string | null>(null)
   const [globalSearch, setGlobalSearch] = React.useState('')
 
@@ -197,6 +206,18 @@ export default function AdminUsersClient({ users: initialUsers }: AdminUsersClie
       if (res?.error) setError(res.error)
     })
   }, [])
+
+  const handleDelete = React.useCallback(() => {
+    if (!userToDelete) return
+    startTransition(async () => {
+      const res = await deleteUser(userToDelete.id)
+      if (res?.error) {
+        setError(res.error)
+      } else {
+        setUserToDelete(null)
+      }
+    })
+  }, [userToDelete])
 
   // Filtered dataset for local search
   const filteredData = React.useMemo(() => {
@@ -347,7 +368,7 @@ export default function AdminUsersClient({ users: initialUsers }: AdminUsersClie
         cell: ({ row }) => {
           const user = row.original
           return (
-            <div className="text-right">
+            <div className="text-right flex items-center justify-end gap-2">
               <button
                 disabled={isPending}
                 onClick={() => handleToggleStatus(user.id, user.status)}
@@ -361,12 +382,23 @@ export default function AdminUsersClient({ users: initialUsers }: AdminUsersClie
                 {user.status === 'active' ? <UserX className="h-3.5 w-3.5" /> : <UserCheck className="h-3.5 w-3.5" />}
                 {user.status === 'active' ? 'Deactivate' : 'Activate'}
               </button>
+              {user.id !== currentUserId && (
+                <button
+                  disabled={isPending}
+                  onClick={() => setUserToDelete(user)}
+                  title="Delete user permanently"
+                  className="inline-flex items-center gap-1 px-sm py-1 rounded-md border border-red-900/30 bg-red-950/15 hover:bg-red-950/25 text-red-400 text-xs font-medium transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Delete
+                </button>
+              )}
             </div>
           )
         },
       },
     ],
-    [isPending, handleToggleStatus]
+    [isPending, handleToggleStatus, currentUserId]
   )
 
   const table = useReactTable({
@@ -630,6 +662,47 @@ export default function AdminUsersClient({ users: initialUsers }: AdminUsersClie
             </form>
           </div>
         </div>
+      )}
+
+      {/* Delete User Modal */}
+      {userToDelete && (
+        <Dialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
+          <DialogContent className="sm:max-w-md bg-surface-1 border border-hairline text-ink">
+            <DialogHeader>
+              <DialogTitle className="text-headline font-semibold flex items-center gap-2 text-red-400">
+                <Trash2 className="h-5 w-5" />
+                Delete User
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-md py-sm">
+              <p className="text-sm text-ink-muted leading-relaxed">
+                Are you sure you want to permanently delete <strong className="text-ink">{userToDelete.legal_full_name}</strong> (<span className="text-ink-subtle">{userToDelete.email}</span>)?
+              </p>
+              <div className="p-sm bg-red-950/10 border border-red-900/30 rounded-lg text-xs text-red-400 leading-normal">
+                This action is destructive and irreversible. It will cascade delete all associated profiles, shifts, availability, schedules, pay records, and notifications.
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-sm pt-md border-t border-hairline">
+              <button
+                type="button"
+                onClick={() => setUserToDelete(null)}
+                disabled={isPending}
+                className="bg-surface-2 hover:bg-surface-3 text-ink px-lg py-2 rounded-md font-medium border border-hairline text-button transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={isPending}
+                className="inline-flex items-center gap-xs bg-red-950/20 hover:bg-red-950/30 text-red-400 px-lg py-2 rounded-md font-medium text-button border border-red-900/40 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                Delete Permanently
+              </button>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   )

@@ -52,7 +52,10 @@ export default async function DashboardLayout({
   const completedDates = (shifts || []).map((s) => s.clock_in)
   const streakCount = calculateStreak(completedDates)
 
-  const notifications = notificationsRes.data
+  const notifications = (notificationsRes.data || []).map((n) => ({
+    ...n,
+    type: n.type as 'schedule_change' | 'pay_update' | 'admin_announcement',
+  }))
   const activeShifts = activeShiftsRes.data
   const hasActiveShift = !!(activeShifts && activeShifts.length > 0)
 
