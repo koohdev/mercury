@@ -163,6 +163,7 @@ function PayRateCell({
 }
 
 export default function AdminUsersClient({ users: initialUsers, currentUserId }: AdminUsersClientProps) {
+  "use no memo";
   const [data, setData] = React.useState(() => initialUsers)
   const [isPending, startTransition] = React.useTransition()
   const [showCreateModal, setShowCreateModal] = React.useState(false)
@@ -401,6 +402,7 @@ export default function AdminUsersClient({ users: initialUsers, currentUserId }:
     [isPending, handleToggleStatus, currentUserId]
   )
 
+  // eslint-disable-next-line react-compiler/react-compiler
   const table = useReactTable({
     data: filteredData,
     columns,

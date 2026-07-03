@@ -182,8 +182,8 @@ export default function MembersAvailabilityClient({
     const row = memberAvailability.find((a) => a.day_of_week === dayOfWeek)
     if (!row || !row.is_available) return null
     return {
-      startTime: row.start_time ? timeToLocal(row.start_time, memberTz) : '—',
-      endTime: row.end_time ? timeToLocal(row.end_time, memberTz) : '—',
+      startTime: row.start_time ? timeToLocal(row.start_time, 'America/New_York') : '—',
+      endTime: row.end_time ? timeToLocal(row.end_time, 'America/New_York') : '—',
     }
   }
 
@@ -237,6 +237,20 @@ export default function MembersAvailabilityClient({
           </div>
         </div>
 
+        {/* Timezone notice for admin */}
+        <div className="flex items-start gap-sm bg-surface-1 p-sm border border-hairline rounded-lg text-body-sm text-ink-muted">
+          <Globe className="mt-0.5 w-4 h-4 text-ink-subtle shrink-0" />
+          <div className="flex flex-col sm:flex-row sm:items-baseline gap-x-xs gap-y-0.5">
+            <div>
+              <span className="font-medium text-ink">Display timezone: </span>
+              <span className="font-semibold text-ink">EST (America/New_York)</span>
+            </div>
+            <span className="text-ink-tertiary text-xs sm:text-body-sm sm:before:content-['—_']">
+              All availability hours are automatically converted to EST for comparison.
+            </span>
+          </div>
+        </div>
+
         {/* Days Availability Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-sm">
           {DAYS.map(({ dayOfWeek, label }) => {
@@ -273,7 +287,7 @@ export default function MembersAvailabilityClient({
                     <div className="flex items-center gap-xs w-full">
                       <Clock className="w-4 h-4 text-ink-subtle shrink-0" />
                       <div className="text-caption font-mono font-medium text-ink flex-1 truncate">
-                        {avail.startTime} <span className="text-ink-tertiary font-sans px-xxs">to</span> {avail.endTime}
+                        {avail.startTime} <span className="text-ink-tertiary font-sans px-xxs">to</span> {avail.endTime} <span className="text-[10px] text-ink-muted uppercase ml-1">EST</span>
                       </div>
                     </div>
                   ) : (

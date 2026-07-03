@@ -117,7 +117,7 @@ export default function AvailabilityClient({
             <span className="font-semibold text-ink">{userTimezone}</span>
           </div>
           <span className="text-ink-tertiary text-xs sm:text-body-sm sm:before:content-['—_']">
-            Times entered and shown in this timezone. Stored as UTC.
+            Times entered and shown in this timezone. Converted automatically and stored/displayed as EST for Admins.
           </span>
         </div>
       </div>
