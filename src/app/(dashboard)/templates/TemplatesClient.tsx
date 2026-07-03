@@ -29,6 +29,8 @@ export default function TemplatesClient({
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all')
   const [copiedId, setCopiedId] = useState<string | null>(null)
   
+  const selectedCategory = initialCategories.find(c => c.id === selectedCategoryId)
+  
   // Modal & form states
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalType, setModalType] = useState<'create' | 'edit'>('create')
@@ -179,7 +181,7 @@ export default function TemplatesClient({
     <div className="space-y-lg">
       {/* Top action bar: Search, Add Template (Admin) */}
       <div className="flex flex-col gap-md sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative flex-1 max-w-md">
+        <div className="relative w-full sm:max-w-md">
           <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-ink-subtle" />
           <input
             type="text"
@@ -191,13 +193,24 @@ export default function TemplatesClient({
         </div>
 
         {isAdmin && (
-          <button
-            onClick={openCreateModal}
-            className="inline-flex items-center gap-xs bg-primary hover:bg-primary-hover active:bg-primary-focus text-primary-foreground px-lg py-2 rounded-md font-medium text-button transition-colors duration-150 cursor-pointer shadow-md"
-          >
-            <Plus className="h-4 w-4" />
-            Add Template
-          </button>
+          <div className="flex flex-col sm:flex-row gap-sm w-full sm:w-auto">
+            <button
+              onClick={openCreateModal}
+              className="inline-flex items-center justify-center gap-xs bg-primary hover:bg-primary-hover active:bg-primary-focus text-primary-foreground px-lg py-2 rounded-md font-medium text-button transition-colors duration-150 cursor-pointer shadow-md w-full sm:w-auto"
+            >
+              <Plus className="h-4 w-4" />
+              Add Template
+            </button>
+            {selectedCategory && (
+              <button
+                onClick={() => handleDeleteCategory(selectedCategory.id, selectedCategory.name)}
+                className="inline-flex items-center justify-center gap-xs bg-destructive hover:bg-destructive/90 text-white px-lg py-2 rounded-md font-medium text-button transition-colors duration-150 cursor-pointer shadow-md w-full sm:w-auto"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete Catalog
+              </button>
+            )}
+          </div>
         )}
       </div>
 
@@ -214,31 +227,17 @@ export default function TemplatesClient({
           All
         </button>
         {initialCategories.map((category) => (
-          <div key={category.id} className="relative flex items-center gap-1 shrink-0 group">
-            <button
-              onClick={() => setSelectedCategoryId(category.id)}
-              className={`px-sm py-1.5 rounded-pill text-body-sm font-medium transition-colors duration-150 whitespace-nowrap cursor-pointer ${
-                selectedCategoryId === category.id
-                  ? 'bg-surface-3 text-ink border border-hairline-strong'
-                  : 'text-ink-subtle hover:text-ink hover:bg-surface-2 border border-transparent'
-              }`}
-            >
-              {category.name}
-            </button>
-            {isAdmin && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleDeleteCategory(category.id, category.name)
-                }}
-                title={`Delete ${category.name} category`}
-                className="p-1 rounded-full text-ink-subtle hover:text-red-400 hover:bg-red-950/20 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 cursor-pointer border border-transparent"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            )}
-          </div>
+          <button
+            key={category.id}
+            onClick={() => setSelectedCategoryId(category.id)}
+            className={`px-sm py-1.5 rounded-pill text-body-sm font-medium transition-colors duration-150 whitespace-nowrap cursor-pointer shrink-0 ${
+              selectedCategoryId === category.id
+                ? 'bg-surface-3 text-ink border border-hairline-strong'
+                : 'text-ink-subtle hover:text-ink hover:bg-surface-2 border border-transparent'
+            }`}
+          >
+            {category.name}
+          </button>
         ))}
       </div>
 
@@ -290,7 +289,7 @@ export default function TemplatesClient({
 
                   {/* Admin inline controls */}
                   {isAdmin && (
-                    <div className="flex items-center gap-xs opacity-0 group-hover:opacity-100 transition-opacity duration-150" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center gap-xs opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-150" onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => openEditModal(template)}
                         title="Edit Template"

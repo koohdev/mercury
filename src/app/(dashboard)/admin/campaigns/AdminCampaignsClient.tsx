@@ -17,6 +17,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from '@/components/ui/dialog'
 import {
   Select,
@@ -57,12 +59,17 @@ export default function AdminCampaignsClient({
   initialAssignments,
   moderators,
 }: AdminCampaignsClientProps) {
-  const [campaigns] = useState<Campaign[]>(initialCampaigns)
+  const [campaigns, setCampaigns] = useState<Campaign[]>(initialCampaigns)
   const [assignments, setAssignments] = useState<Assignment[]>(initialAssignments)
   const [isPending, startTransition] = useTransition()
 
   const searchParams = useSearchParams()
   const router = useRouter()
+
+  useEffect(() => {
+    setCampaigns(initialCampaigns)
+    setAssignments(initialAssignments)
+  }, [initialCampaigns, initialAssignments])
 
   useEffect(() => {
     if (searchParams.get('create') === 'true') {
@@ -77,7 +84,9 @@ export default function AdminCampaignsClient({
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showAssignModal, setShowAssignModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null)
+  const [campaignToDelete, setCampaignToDelete] = useState<Campaign | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   // Search filter for moderators
@@ -93,16 +102,18 @@ export default function AdminCampaignsClient({
     e.preventDefault()
     setError(null)
     startTransition(async () => {
-      const res = await createCampaign({ name, description, status })
-      if (res?.error) {
-        setError(res.error)
-      } else {
-        setShowCreateModal(false)
-        setName('')
-        setDescription('')
-        setStatus('active')
-        // Refresh local data (Next.js server action revalidate handles DB, we refresh window or refetch)
-        window.location.reload()
+      try {
+        const res = await createCampaign({ name, description, status })
+        if (res?.error) {
+          setError(res.error)
+        } else {
+          setShowCreateModal(false)
+          setName('')
+          setDescription('')
+          setStatus('active')
+        }
+      } catch (err: any) {
+        setError(err.message || 'An unexpected error occurred during creation.')
       }
     })
   }
@@ -112,50 +123,63 @@ export default function AdminCampaignsClient({
     if (!selectedCampaign) return
     setError(null)
     startTransition(async () => {
-      const res = await updateCampaign(selectedCampaign.id, { name, description, status })
-      if (res?.error) {
-        setError(res.error)
-      } else {
-        setShowEditModal(false)
-        window.location.reload()
+      try {
+        const res = await updateCampaign(selectedCampaign.id, { name, description, status })
+        if (res?.error) {
+          setError(res.error)
+        } else {
+          setShowEditModal(false)
+        }
+      } catch (err: any) {
+        setError(err.message || 'An unexpected error occurred during update.')
       }
     })
   }
 
-  const handleDelete = (campaignId: string) => {
-    if (!confirm('Are you sure you want to delete this campaign? All moderator assignments will be removed.')) return
+  const handleDeleteConfirm = () => {
+    if (!campaignToDelete) return
+    setError(null)
     startTransition(async () => {
-      const res = await deleteCampaign(campaignId)
-      if (res?.error) {
-        alert(res.error)
-      } else {
-        window.location.reload()
+      try {
+        const res = await deleteCampaign(campaignToDelete.id)
+        if (res?.error) {
+          setError(res.error)
+        } else {
+          setShowDeleteModal(false)
+          setCampaignToDelete(null)
+        }
+      } catch (err: any) {
+        setError(err.message || 'An unexpected error occurred during deletion.')
       }
     })
   }
 
   const handleToggleAssignment = async (campaignId: string, moderatorId: string, isCurrentlyAssigned: boolean) => {
     startTransition(async () => {
-      if (isCurrentlyAssigned) {
-        const res = await unassignModerator(campaignId, moderatorId)
-        if (res?.error) {
-          alert(res.error)
+      try {
+        if (isCurrentlyAssigned) {
+          const res = await unassignModerator(campaignId, moderatorId)
+          if (res?.error) {
+            alert(res.error)
+          } else {
+            setAssignments((prev) =>
+              prev.filter((a) => !(a.campaign_id === campaignId && a.moderator_id === moderatorId))
+            )
+          }
         } else {
-          setAssignments((prev) =>
-            prev.filter((a) => !(a.campaign_id === campaignId && a.moderator_id === moderatorId))
-          )
+          const res = await assignModerator(campaignId, moderatorId)
+          if (res?.error) {
+            alert(res.error)
+          } else {
+            // Add temporary mock assignment record to update state instantly
+            setAssignments((prev) => [
+              ...prev,
+              { id: Math.random().toString(), campaign_id: campaignId, moderator_id: moderatorId },
+            ])
+          }
         }
-      } else {
-        const res = await assignModerator(campaignId, moderatorId)
-        if (res?.error) {
-          alert(res.error)
-        } else {
-          // Add temporary mock assignment record to update state instantly
-          setAssignments((prev) => [
-            ...prev,
-            { id: Math.random().toString(), campaign_id: campaignId, moderator_id: moderatorId },
-          ])
-        }
+      } catch (err: any) {
+        alert(err.message || 'An unexpected error occurred while toggling assignment.')
       }
     })
   }
@@ -175,6 +199,12 @@ export default function AdminCampaignsClient({
     setStatus(campaign.status as 'active' | 'completed' | 'paused')
     setError(null)
     setShowEditModal(true)
+  }
+
+  const openDelete = (campaign: Campaign) => {
+    setCampaignToDelete(campaign)
+    setError(null)
+    setShowDeleteModal(true)
   }
 
   const openAssign = (campaign: Campaign) => {
@@ -259,7 +289,7 @@ export default function AdminCampaignsClient({
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
                       <button
-                        onClick={() => handleDelete(campaign.id)}
+                        onClick={() => openDelete(campaign)}
                         className="p-1 hover:bg-red-950/20 text-red-400 rounded transition-colors cursor-pointer"
                         title="Delete Campaign"
                       >
@@ -552,6 +582,48 @@ export default function AdminCampaignsClient({
                 Done
               </button>
             </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* DELETE CONFIRM MODAL */}
+      {showDeleteModal && campaignToDelete && (
+        <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+          <DialogContent className="sm:max-w-md bg-surface-1 border border-hairline text-ink">
+            <DialogHeader>
+              <DialogTitle className="text-headline font-semibold text-red-500">Delete Campaign</DialogTitle>
+              <DialogDescription className="text-ink-muted mt-2">
+                Are you sure you want to delete the campaign &ldquo;{campaignToDelete.name}&rdquo;?
+                This action cannot be undone. All moderator assignments will be removed.
+              </DialogDescription>
+            </DialogHeader>
+
+            {error && (
+              <div className="bg-red-950/20 p-sm border border-red-900/50 rounded-md text-body-sm text-red-400">
+                {error}
+              </div>
+            )}
+
+            <DialogFooter className="flex justify-end gap-sm pt-md border-hairline border-t">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteModal(false)
+                  setCampaignToDelete(null)
+                }}
+                className="bg-surface-2 hover:bg-surface-3 px-lg py-2 border border-hairline rounded-md text-button text-ink transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                disabled={isPending}
+                className="bg-red-600 hover:bg-red-700 disabled:opacity-50 px-lg py-2 rounded-md font-medium text-button text-white transition-colors cursor-pointer flex items-center gap-xs"
+              >
+                {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                Confirm Delete
+              </button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       )}

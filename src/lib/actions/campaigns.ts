@@ -11,96 +11,116 @@ const CampaignSchema = z.object({
 })
 
 export async function createCampaign(rawInput: unknown) {
-  const { supabase } = await getAdminOrManagerClient()
+  try {
+    const { supabase } = await getAdminOrManagerClient()
 
-  const result = CampaignSchema.safeParse(rawInput)
-  if (!result.success) {
-    return { error: result.error.issues[0]?.message || 'Invalid input' }
-  }
-  const validated = result.data
+    const result = CampaignSchema.safeParse(rawInput)
+    if (!result.success) {
+      return { error: result.error.issues[0]?.message || 'Invalid input' }
+    }
+    const validated = result.data
 
-  const { error } = await supabase.from('campaigns').insert({
-    name: validated.name,
-    description: validated.description || null,
-    status: validated.status,
-  })
-
-  if (error) return { error: error.message }
-
-  revalidatePath('/admin/campaigns')
-  return { success: true }
-}
-
-export async function updateCampaign(id: string, rawInput: unknown) {
-  const { supabase } = await getAdminOrManagerClient()
-
-  const result = CampaignSchema.safeParse(rawInput)
-  if (!result.success) {
-    return { error: result.error.issues[0]?.message || 'Invalid input' }
-  }
-  const validated = result.data
-
-  const { error } = await supabase
-    .from('campaigns')
-    .update({
+    const { error } = await supabase.from('campaigns').insert({
       name: validated.name,
       description: validated.description || null,
       status: validated.status,
     })
-    .eq('id', id)
 
-  if (error) return { error: error.message }
+    if (error) return { error: error.message }
 
-  revalidatePath('/admin/campaigns')
-  revalidatePath('/campaigns')
-  return { success: true }
+    revalidatePath('/admin/campaigns')
+    return { success: true }
+  } catch (err: any) {
+    return { error: err.message || 'An unexpected error occurred' }
+  }
+}
+
+export async function updateCampaign(id: string, rawInput: unknown) {
+  try {
+    const { supabase } = await getAdminOrManagerClient()
+
+    const result = CampaignSchema.safeParse(rawInput)
+    if (!result.success) {
+      return { error: result.error.issues[0]?.message || 'Invalid input' }
+    }
+    const validated = result.data
+
+    const { error } = await supabase
+      .from('campaigns')
+      .update({
+        name: validated.name,
+        description: validated.description || null,
+        status: validated.status,
+      })
+      .eq('id', id)
+
+    if (error) return { error: error.message }
+
+    revalidatePath('/admin/campaigns')
+    revalidatePath('/campaigns')
+    return { success: true }
+  } catch (err: any) {
+    return { error: err.message || 'An unexpected error occurred' }
+  }
 }
 
 export async function deleteCampaign(id: string) {
-  const { supabase } = await getAdminOrManagerClient()
+  try {
+    const { supabase } = await getAdminOrManagerClient()
 
-  const { error } = await supabase.from('campaigns').delete().eq('id', id)
+    const { error } = await supabase.from('campaigns').delete().eq('id', id)
 
-  if (error) return { error: error.message }
+    if (error) return { error: error.message }
 
-  revalidatePath('/admin/campaigns')
-  revalidatePath('/campaigns')
-  return { success: true }
+    revalidatePath('/admin/campaigns')
+    revalidatePath('/campaigns')
+    return { success: true }
+  } catch (err: any) {
+    return { error: err.message || 'An unexpected error occurred' }
+  }
 }
 
 export async function assignModerator(campaignId: string, moderatorId: string) {
-  const { supabase, user } = await getAdminOrManagerClient()
+  try {
+    const { supabase, user } = await getAdminOrManagerClient()
 
-  const { error } = await supabase.from('campaign_assignments').insert({
-    campaign_id: campaignId,
-    moderator_id: moderatorId,
-    assigned_by: user.id,
-  })
+    const { error } = await supabase.from('campaign_assignments').insert({
+      campaign_id: campaignId,
+      moderator_id: moderatorId,
+      assigned_by: user.id,
+    })
 
-  if (error) {
-    if (error.code === '23505') {
-      return { success: true }
+    if (error) {
+      if (error.code === '23505') {
+        return { success: true }
+      }
+      return { error: error.message }
     }
-    return { error: error.message }
-  }
 
-  revalidatePath('/admin/campaigns')
-  revalidatePath('/campaigns')
-  return { success: true }
+    revalidatePath('/admin/campaigns')
+    revalidatePath('/campaigns')
+    return { success: true }
+  } catch (err: any) {
+    return { error: err.message || 'An unexpected error occurred' }
+  }
 }
 
 export async function unassignModerator(campaignId: string, moderatorId: string) {
-  const { supabase } = await getAdminOrManagerClient()
+  try {
+    const { supabase } = await getAdminOrManagerClient()
 
-  const { error } = await supabase
-    .from('campaign_assignments')
-    .delete()
-    .eq('campaign_id', campaignId)
-    .eq('moderator_id', moderatorId)
+    const { error } = await supabase
+      .from('campaign_assignments')
+      .delete()
+      .eq('campaign_id', campaignId)
+      .eq('moderator_id', moderatorId)
 
-  if (error) return { error: error.message }
+    if (error) return { error: error.message }
 
-  revalidatePath('/admin/campaigns')
-  revalidatePath('/campaigns')
-  return { success: true }
+    revalidatePath('/admin/campaigns')
+    revalidatePath('/campaigns')
+    return { success: true }
+  } catch (err: any) {
+    return { error: err.message || 'An unexpected error occurred' }
+  }
 }
