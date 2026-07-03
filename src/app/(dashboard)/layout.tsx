@@ -17,6 +17,8 @@ export default async function DashboardLayout({
     redirect("/login")
   }
 
+  const showFrog = user?.email === "jazganda393@gmail.com" || user?.email === "admin-dev@account.com"
+
   const supabase = await createServerClient()
   const role = user.app_metadata?.role || "moderator"
   const isAdmin = role === "admin" || role === "manager"
@@ -97,9 +99,19 @@ export default async function DashboardLayout({
                 {children}
               </main>
             </div>
+
           </SidebarInset>
         </div>
       </SidebarProvider>
+      {showFrog && (
+        <div className="fixed bottom-4 right-4 z-[9999] pointer-events-none select-none">
+          <img
+            src="/froggy.gif"
+            alt="Froggy"
+            className="w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 object-contain"
+          />
+        </div>
+      )}
     </TooltipProvider>
   )
 }
