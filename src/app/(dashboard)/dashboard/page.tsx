@@ -37,11 +37,11 @@ export default async function DashboardPage() {
   const shiftsQuery = isManagerOrAdmin
     ? supabase
         .from("shifts")
-        .select("id, clock_in, clock_out, total_active_time, total_break_time, status, summary")
+        .select("id, clock_in, clock_out, total_active_time, total_break_time, status, summary, profiles(legal_full_name)")
         .order("clock_in", { ascending: false })
     : supabase
         .from("shifts")
-        .select("id, clock_in, clock_out, total_active_time, total_break_time, status, summary")
+        .select("id, clock_in, clock_out, total_active_time, total_break_time, status, summary, profiles(legal_full_name)")
         .eq("user_id", user.id)
         .order("clock_in", { ascending: false })
 
@@ -68,7 +68,10 @@ export default async function DashboardPage() {
 
   const profile = profileRes.data
   const activeShifts = activeShiftsRes.data
-  const shifts = shiftsRes.data
+  const shifts = (shiftsRes.data || []).map((s) => ({
+    ...s,
+    profiles: Array.isArray(s.profiles) ? s.profiles[0] : s.profiles
+  }))
   const campaignsCount = campaignCountRes.count || 0
   const activeShift = activeShifts && activeShifts.length > 0 ? {
     id: activeShifts[0].id,

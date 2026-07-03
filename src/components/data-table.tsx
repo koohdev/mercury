@@ -40,6 +40,7 @@ import { z } from "zod"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -94,6 +95,9 @@ export const shiftSchema = z.object({
   total_break_time: z.string().nullable(),
   status: z.string(),
   summary: z.string().nullable(),
+  profiles: z.object({
+    legal_full_name: z.string(),
+  }).nullable().optional(),
 })
 
 type ShiftRecord = z.infer<typeof shiftSchema>
@@ -110,6 +114,16 @@ function formatPostgresInterval(intervalStr: string | null): string {
     return `${hrs}h ${mins}m`
   }
   return `${mins}m`
+}
+
+function getInitials(name?: string | null): string {
+  if (!name) return "?"
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2)
 }
 
 function DragHandle({ id }: { id: string }) {
@@ -130,128 +144,6 @@ function DragHandle({ id }: { id: string }) {
     </Button>
   )
 }
-
-const columns: ColumnDef<ShiftRecord>[] = [
-  {
-    id: "drag",
-    header: () => null,
-    cell: ({ row }) => <DragHandle id={row.original.id} />,
-  },
-  {
-    id: "select",
-    header: ({ table }) => (
-      <div className="flex items-center justify-center">
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
-          }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-        />
-      </div>
-    ),
-    cell: ({ row }) => (
-      <div className="flex items-center justify-center">
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      </div>
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "clock_in",
-    header: "Shift Date",
-    cell: ({ row }) => {
-      return <TableCellViewer item={row.original} />
-    },
-    enableHiding: false,
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => {
-      const status = row.original.status
-      return (
-        <Badge
-          variant="outline"
-          className={`px-1.5 font-medium gap-1.5 ${
-            status === "completed"
-              ? "border border-green-500/30 text-green-600 dark:text-green-400 bg-transparent"
-              : status === "on_break"
-              ? "border-l-2 border-l-amber-500 text-amber-400 bg-amber-950/20"
-              : "border-l-2 border-l-blue-500 text-blue-400 bg-blue-950/20"
-          }`}
-        >
-          {status === "completed" ? (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none" className="size-3.5 fill-green-500 dark:fill-green-400"><path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-1.293 5.953a1 1 0 0 0 -1.32 -.083l-.094 .083l-3.293 3.292l-1.293 -1.292l-.094 -.083a1 1 0 0 0 -1.403 1.403l.083 .094l2 2l.094 .083a1 1 0 0 0 1.226 0l.094 -.083l4 -4l.083 -.094a1 1 0 0 0 -.083 -1.32z"></path></svg>
-          ) : (
-            <LoaderIcon className="size-3 animate-spin" />
-          )}
-          <span className="capitalize">{status.replace("_", " ")}</span>
-        </Badge>
-      )
-    },
-  },
-  {
-    accessorKey: "total_active_time",
-    header: "Active Time",
-    cell: ({ row }) => (
-      <span className="text-sm text-ink-muted">
-        {row.original.status === "completed"
-          ? formatPostgresInterval(row.original.total_active_time)
-          : "Active Shift"}
-      </span>
-    ),
-  },
-  {
-    accessorKey: "total_break_time",
-    header: "Break Time",
-    cell: ({ row }) => (
-      <span className="text-sm text-ink-muted">
-        {row.original.status === "completed"
-          ? formatPostgresInterval(row.original.total_break_time)
-          : "N/A"}
-      </span>
-    ),
-  },
-  {
-    accessorKey: "summary",
-    header: "Summary/Recap",
-    cell: ({ row }) => (
-      <div className="max-w-[200px] truncate text-sm text-ink-muted">
-        {row.original.summary || "No summary provided."}
-      </div>
-    ),
-  },
-  {
-    id: "actions",
-    cell: () => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
-            size="icon"
-          >
-            <EllipsisVerticalIcon className="size-4" />
-            <span className="sr-only">Open menu</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-32 bg-surface-2 border border-hairline text-ink">
-          <DropdownMenuItem className="cursor-pointer">Edit</DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer">Share</DropdownMenuItem>
-          <DropdownMenuSeparator className="bg-hairline" />
-          <DropdownMenuItem variant="destructive" className="cursor-pointer text-red-400">Delete</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
-  },
-]
 
 function DraggableRow({ row }: { row: Row<ShiftRecord> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
@@ -323,6 +215,130 @@ export function DataTable({
     () => filteredData?.map(({ id }) => id) || [],
     [filteredData]
   )
+
+  const columns = React.useMemo<ColumnDef<ShiftRecord>[]>(() => {
+    const hasEmployee = data.some((item: any) => item.profiles?.legal_full_name)
+    const baseCols: ColumnDef<ShiftRecord>[] = [
+      {
+        id: "drag",
+        header: () => null,
+        cell: ({ row }) => <DragHandle id={row.original.id} />,
+      },
+
+    ]
+
+    if (hasEmployee) {
+      baseCols.push({
+        id: "employee",
+        header: "Employee",
+        cell: ({ row }) => {
+          const profile = (row.original as any).profiles
+          const name = profile?.legal_full_name || "Unknown"
+          const initials = getInitials(name)
+          return (
+            <div className="flex items-center gap-2">
+              <Avatar className="h-8 w-8 rounded-full shrink-0">
+                <AvatarFallback className="rounded-full bg-surface-3 text-ink-muted text-xs font-semibold">{initials}</AvatarFallback>
+              </Avatar>
+              <span className="text-sm font-medium text-ink">{name}</span>
+            </div>
+          )
+        },
+      })
+    }
+
+    baseCols.push(
+      {
+        accessorKey: "clock_in",
+        header: "Shift Date",
+        cell: ({ row }) => {
+          return <TableCellViewer item={row.original} />
+        },
+        enableHiding: false,
+      },
+      {
+        accessorKey: "status",
+        header: "Status",
+        cell: ({ row }) => {
+          const status = row.original.status
+          return (
+            <Badge
+              variant="outline"
+              className={`px-1.5 font-medium gap-1.5 ${
+                status === "completed"
+                  ? "border border-green-500/30 text-green-600 dark:text-green-400 bg-transparent"
+                  : status === "on_break"
+                  ? "border-l-2 border-l-amber-500 text-amber-400 bg-amber-950/20"
+                  : "border-l-2 border-l-blue-500 text-blue-400 bg-blue-950/20"
+              }`}
+            >
+              {status === "completed" ? (
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none" className="size-3.5 fill-green-500 dark:fill-green-400"><path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-1.293 5.953a1 1 0 0 0 -1.32 -.083l-.094 .083l-3.293 3.292l-1.293 -1.292l-.094 -.083a1 1 0 0 0 -1.403 1.403l.083 .094l2 2l.094 .083a1 1 0 0 0 1.226 0l.094 -.083l4 -4l.083 -.094a1 1 0 0 0 -.083 -1.32z"></path></svg>
+              ) : (
+                <LoaderIcon className="size-3 animate-spin" />
+              )}
+              <span className="capitalize">{status.replace("_", " ")}</span>
+            </Badge>
+          )
+        },
+      },
+      {
+        accessorKey: "total_active_time",
+        header: "Active Time",
+        cell: ({ row }) => (
+          <span className="text-sm text-ink-muted">
+            {row.original.status === "completed"
+              ? formatPostgresInterval(row.original.total_active_time)
+              : "Active Shift"}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "total_break_time",
+        header: "Break Time",
+        cell: ({ row }) => (
+          <span className="text-sm text-ink-muted">
+            {row.original.status === "completed"
+              ? formatPostgresInterval(row.original.total_break_time)
+              : "N/A"}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "summary",
+        header: "Summary/Recap",
+        cell: ({ row }) => (
+          <div className="max-w-[200px] truncate text-sm text-ink-muted">
+            {row.original.summary || "No summary provided."}
+          </div>
+        ),
+      },
+      {
+        id: "actions",
+        cell: () => (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
+                size="icon"
+              >
+                <EllipsisVerticalIcon className="size-4" />
+                <span className="sr-only">Open menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-32 bg-surface-2 border border-hairline text-ink">
+              <DropdownMenuItem className="cursor-pointer">Edit</DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer">Share</DropdownMenuItem>
+              <DropdownMenuSeparator className="bg-hairline" />
+              <DropdownMenuItem variant="destructive" className="cursor-pointer text-red-400">Delete</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ),
+      }
+    )
+    return baseCols
+  }, [data])
 
   const table = useReactTable({
     data: filteredData,
@@ -503,7 +519,19 @@ export function DataTable({
               return (
                 <div key={item.id} className="bg-surface-1 border border-hairline rounded-lg p-lg space-y-md">
                   <div className="flex items-center justify-between border-b border-hairline pb-sm">
-                    <TableCellViewer item={item} />
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-8 w-8 rounded-full shrink-0">
+                        <AvatarFallback className="rounded-full bg-surface-3 text-ink-muted text-xs font-semibold">
+                          {getInitials(item.profiles?.legal_full_name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col gap-0.5">
+                        {item.profiles?.legal_full_name && (
+                          <span className="text-xs font-semibold text-ink-subtle">{item.profiles.legal_full_name}</span>
+                        )}
+                        <TableCellViewer item={item} />
+                      </div>
+                    </div>
                     <div className="flex items-center gap-xs">
                       <Badge
                         variant="outline"
@@ -579,10 +607,7 @@ export function DataTable({
           )}
         </div>
         <div className="flex items-center justify-between px-4">
-          <div className="hidden flex-1 text-sm text-ink-subtle lg:flex">
-            {table.getFilteredSelectedRowModel().rows.length} of{" "}
-            {table.getFilteredRowModel().rows.length} shift(s) selected.
-          </div>
+
           <div className="flex w-full items-center gap-8 lg:w-fit">
             <div className="hidden items-center gap-2 lg:flex">
               <Label htmlFor="rows-per-page" className="text-sm font-medium text-ink-muted">
@@ -700,6 +725,18 @@ function TableCellViewer({ item }: { item: ShiftRecord }) {
       <DrawerContent className="bg-surface-1 border border-hairline text-ink h-full max-h-[85vh] md:max-h-full md:w-[400px]">
         <DrawerHeader className="gap-1 border-b border-hairline">
           <DrawerTitle className="text-ink">Shift Details</DrawerTitle>
+          {item.profiles?.legal_full_name && (
+            <div className="flex items-center gap-2 mt-2">
+              <Avatar className="h-8 w-8 rounded-full shrink-0">
+                <AvatarFallback className="rounded-full bg-surface-3 text-ink-muted text-xs font-semibold">
+                  {getInitials(item.profiles.legal_full_name)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="text-xs font-semibold text-ink-subtle uppercase tracking-wider">
+                Employee: {item.profiles.legal_full_name}
+              </div>
+            </div>
+          )}
           <DrawerDescription className="text-ink-muted">
             {formattedDate}
           </DrawerDescription>
@@ -751,7 +788,7 @@ function TableCellViewer({ item }: { item: ShiftRecord }) {
               />
             </div>
             <div className="mt-auto pt-4 border-t border-hairline flex gap-2 justify-end">
-              <Button type="submit" disabled={isPending} className="bg-primary hover:bg-primary-hover text-ink cursor-pointer">
+              <Button type="submit" disabled={isPending} className="bg-primary hover:bg-primary-hover text-white dark:text-black cursor-pointer">
                 {isPending ? "Saving..." : "Save Changes"}
               </Button>
               <DrawerClose asChild>
