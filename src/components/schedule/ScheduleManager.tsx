@@ -524,7 +524,7 @@ export default function ScheduleManager({
                         style={{
                           backgroundColor: `${shift.color || '#5e6ad2'}1a`
                         }}
-                        className="px-1.5 py-0.5 rounded-sm text-[9px] text-ink truncate leading-tight"
+                        className="sched-event sched-event-hover px-1.5 py-0.5 rounded-sm text-[9px] text-ink truncate leading-tight"
                       >
                         <span className="font-semibold">{getUserName(shift.user_id)}</span> {shift.label || 'Coverage'}
                       </div>
@@ -541,7 +541,7 @@ export default function ScheduleManager({
                     {shifts.map((shift) => (
                       <span
                         key={shift.id}
-                        className="rounded-full w-1.5 h-1.5 shrink-0"
+                        className="sched-dot rounded-full w-1.5 h-1.5 shrink-0"
                         style={{ backgroundColor: shift.color || '#5e6ad2' }}
                       />
                     ))}
@@ -597,8 +597,8 @@ export default function ScheduleManager({
                             style={{
                               backgroundColor: `${shift.color || '#5e6ad2'}1a`
                             }}
-                            className={`p-xs rounded-md text-left space-y-xxs transition-all text-caption ${
-                              isAdmin ? 'hover:bg-surface-3/50 hover:translate-x-0.5 cursor-pointer' : ''
+                            className={`sched-event sched-event-hover p-xs rounded-md text-left space-y-xxs transition-all text-caption ${
+                              isAdmin ? 'hover:bg-surface-3/50 cursor-pointer' : ''
                             } ${isCurrentUser ? 'outline-1 outline-primary/40 ring-1 ring-primary/40' : ''}`}
                           >
                             <div className="flex justify-between items-center gap-xxs">
@@ -699,7 +699,7 @@ export default function ScheduleManager({
                               backgroundColor: `${shift.color || '#5e6ad2'}12`,
                               borderColor: `${shift.color || '#5e6ad2'}40`
                             }}
-                            className={`mx-1.5 my-2 px-sm rounded-lg border text-left flex items-center justify-between transition-all duration-150 z-10 hover:shadow-xs min-h-[38px] ${
+                            className={`sched-event sched-event-hover mx-1.5 my-2 px-sm rounded-lg border text-left flex items-center justify-between transition-all duration-150 z-10 hover:shadow-xs min-h-[38px] ${
                               isAdmin ? 'hover:bg-surface-3/30 cursor-pointer' : ''
                             }`}
                           >
@@ -749,7 +749,7 @@ export default function ScheduleManager({
                   <div
                     key={shift.id}
                     onClick={() => isAdmin && openEditModal(shift)}
-                    className={`flex items-center justify-between py-sm transition-colors ${
+                    className={`sched-event sched-event-hover flex items-center justify-between py-sm transition-colors ${
                       isAdmin ? 'hover:bg-surface-2 cursor-pointer px-sm -mx-sm rounded-md' : ''
                     }`}
                   >
@@ -800,7 +800,7 @@ export default function ScheduleManager({
                   <div
                     key={shift.id}
                     onClick={() => isAdmin && openEditModal(shift)}
-                    className={`flex items-center justify-between py-sm transition-colors ${
+                    className={`sched-event sched-event-hover flex items-center justify-between py-sm transition-colors ${
                       isAdmin ? 'hover:bg-surface-2 cursor-pointer px-sm -mx-sm rounded-md' : ''
                     }`}
                   >
@@ -838,8 +838,8 @@ export default function ScheduleManager({
 
       {/* CREATE MODAL */}
       {showCreateModal && (
-        <div className="z-50 fixed inset-0 flex justify-center items-center bg-semantic-overlay/80 p-md">
-          <div className="space-y-md bg-surface-1 p-lg border border-hairline rounded-lg w-full max-w-md">
+        <div className="sched-modal-backdrop z-50 fixed inset-0 flex justify-center items-center bg-semantic-overlay/80 p-md">
+          <div className="sched-modal-panel space-y-md bg-surface-1 p-lg border border-hairline rounded-lg w-full max-w-md">
             <div>
               <h4 className="font-semibold text-headline text-ink">Create Shift</h4>
               <p className="mt-xxs text-body-sm text-ink-muted">Add a new moderator assignment block.</p>
@@ -1014,8 +1014,8 @@ export default function ScheduleManager({
 
       {/* EDIT MODAL */}
       {showEditModal && selectedEntry && (
-        <div className="z-50 fixed inset-0 flex justify-center items-center bg-semantic-overlay/80 p-md">
-          <div className="space-y-md bg-surface-1 p-lg border border-hairline rounded-lg w-full max-w-md">
+        <div className="sched-modal-backdrop z-50 fixed inset-0 flex justify-center items-center bg-semantic-overlay/80 p-md">
+          <div className="sched-modal-panel space-y-md bg-surface-1 p-lg border border-hairline rounded-lg w-full max-w-md">
             <div className="flex justify-between items-start">
               <div>
                 <h4 className="font-semibold text-headline text-ink">Edit Assignment</h4>

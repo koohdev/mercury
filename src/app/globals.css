@@ -377,6 +377,240 @@ body {
   }
 }
 
+/* ── Schedule event animations ── */
+
+/* Strong ease-out for UI interactions (Emil Kowalski) */
+@keyframes sched-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sched-modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.sched-event {
+  animation: sched-fade-in 350ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+/* Stagger: 50ms between siblings, cap at 12 */
+.sched-event:nth-child(1) { animation-delay: 0ms; }
+.sched-event:nth-child(2) { animation-delay: 50ms; }
+.sched-event:nth-child(3) { animation-delay: 100ms; }
+.sched-event:nth-child(4) { animation-delay: 150ms; }
+.sched-event:nth-child(5) { animation-delay: 200ms; }
+.sched-event:nth-child(6) { animation-delay: 250ms; }
+.sched-event:nth-child(7) { animation-delay: 300ms; }
+.sched-event:nth-child(8) { animation-delay: 350ms; }
+.sched-event:nth-child(9) { animation-delay: 400ms; }
+.sched-event:nth-child(10) { animation-delay: 450ms; }
+.sched-event:nth-child(11) { animation-delay: 500ms; }
+.sched-event:nth-child(12) { animation-delay: 550ms; }
+
+/* Hover lift — only on pointer devices */
+@media (hover: hover) and (pointer: fine) {
+  .sched-event-hover {
+    transition: transform 200ms cubic-bezier(0.23, 1, 0.32, 1),
+                box-shadow 200ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  .sched-event-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+  .sched-event-hover:active {
+    transform: scale(0.98);
+    transition-duration: 100ms;
+  }
+}
+
+/* Modal panel entrance */
+.sched-modal-panel {
+  animation: sched-modal-in 250ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+/* Backdrop fade */
+.sched-modal-backdrop {
+  animation: sched-fade-in 200ms ease both;
+}
+
+/* Month cell dot pulse on hover */
+@media (hover: hover) and (pointer: fine) {
+  .sched-dot {
+    transition: transform 200ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  .sched-dot:hover {
+    transform: scale(1.4);
+  }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .sched-event,
+  .sched-modal-panel,
+  .sched-modal-backdrop {
+    animation: none;
+  }
+  .sched-event-hover {
+    transition: none;
+  }
+}
+
+/* ── General Interactive Components Micro-animations (Emil Kowalski / Ponytail) ── */
+
+/* Define custom easings as CSS variables */
+:root {
+  --ease-emil-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-emil-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+/* Global button and link active-press scaling */
+button:not(:disabled),
+a:not([href="#"]):not(.no-press),
+[role="button"]:not([aria-disabled="true"]),
+[data-slot="sidebar-menu-button"] {
+  transition: transform 160ms var(--ease-emil-out), background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+button:not(:disabled):active,
+a:not([href="#"]):not(.no-press):active,
+[role="button"]:not([aria-disabled="true"]):active,
+[data-slot="sidebar-menu-button"]:active {
+  transform: scale(0.97);
+}
+
+/* Specific button and input hover refinements */
+input, select, textarea {
+  transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease !important;
+}
+
+/* Premium Card hover lifts and depth */
+[data-slot="card"] {
+  transition: transform 250ms var(--ease-emil-out), box-shadow 250ms var(--ease-emil-out), border-color 250ms var(--ease-emil-out) !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-slot="card"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+    border-color: var(--color-hairline-strong) !important;
+  }
+}
+
+/* Theme Toggle button hover animation */
+button[class*="theme-theme"],
+button[aria-label*="theme"],
+button:has(svg path[d*="M12 3l0 18"]) {
+  transition: transform 300ms var(--ease-emil-out);
+}
+button:has(svg path[d*="M12 3l0 18"]):hover svg {
+  transform: rotate(45deg);
+  transition: transform 400ms var(--ease-emil-out);
+}
+button:has(svg path[d*="M12 3l0 18"]) svg {
+  transition: transform 400ms var(--ease-emil-out);
+}
+
+/* Notification Bell hover animation */
+#notification-bell {
+  transition: transform 200ms var(--ease-emil-out);
+}
+#notification-bell:hover svg {
+  animation: bell-ring 600ms var(--ease-emil-in-out);
+}
+
+@keyframes bell-ring {
+  0%, 100% { transform: rotate(0); }
+  15% { transform: rotate(15deg); }
+  30% { transform: rotate(-12deg); }
+  45% { transform: rotate(9deg); }
+  60% { transform: rotate(-6deg); }
+  75% { transform: rotate(3deg); }
+}
+
+/* Dropdown Menu / Select Content Animation using starting-style */
+[data-slot="dropdown-menu-content"],
+[data-slot="select-content"],
+[data-slot="popover-content"] {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 150ms var(--ease-emil-out), transform 150ms var(--ease-emil-out);
+  transform-origin: top;
+}
+
+@starting-style {
+  [data-slot="dropdown-menu-content"],
+  [data-slot="select-content"],
+  [data-slot="popover-content"] {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+/* Sidebar Item micro-indicators / slide highlights */
+[data-slot="sidebar-menu-button"] {
+  position: relative;
+  overflow: hidden;
+}
+[data-slot="sidebar-menu-button"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 15%;
+  height: 70%;
+  width: 3px;
+  background-color: var(--color-primary);
+  border-radius: 9999px;
+  transform: scaleX(0);
+  transition: transform 200ms var(--ease-emil-out);
+}
+[data-slot="sidebar-menu-button"][data-active="true"]::before {
+  transform: scaleX(1);
+}
+
+/* Table Row slide highlighting */
+tr[data-state="selected"], tr:hover {
+  transition: background-color 150ms ease;
+}
+
+/* Availability/Streak check circles scale indicator */
+.streak-check svg {
+  transition: transform 300ms var(--ease-emil-out);
+}
+.streak-check:hover svg {
+  transform: scale(1.2);
+}
+
+/* Respect reduced motion globally */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-delay: -1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    background-attachment: initial !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+  }
+  button:has(svg path[d*="M12 3l0 18"]):hover svg,
+  #notification-bell:hover svg {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
 /* Autofill styling to ensure text remains readable in dark containers when in light mode */
 input:-webkit-autofill {
   -webkit-text-fill-color: var(--ink) !important;

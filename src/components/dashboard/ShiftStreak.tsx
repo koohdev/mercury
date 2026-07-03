@@ -63,7 +63,7 @@ export default function ShiftStreak({ completedDates }: ShiftStreakProps) {
           return (
             <div
               key={idx}
-              className={`flex flex-col items-center p-sm rounded-md border transition-colors ${
+              className={`streak-check flex flex-col items-center p-sm rounded-md border transition-colors cursor-pointer ${
                 isCompleted
                   ? 'bg-surface-3 border-semantic-success/30 text-semantic-success'
                   : isToday
