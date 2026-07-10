@@ -54,6 +54,7 @@ export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...p
   const { setOpenMobile } = useSidebar()
   const [showClockInConfirm, setShowClockInConfirm] = React.useState(false)
   const [isMobileOrTablet, setIsMobileOrTablet] = React.useState(false)
+  const showSanrioGifs = user?.email === "jazganda393@gmail.com" || user?.email === "admin-dev@account.com"
 
   React.useEffect(() => {
     const checkViewport = () => {
@@ -333,6 +334,17 @@ export function AppSidebar({ isAdmin = false, user, hasActiveShift = false, ...p
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
+
+          {showSanrioGifs && (
+            <div className="px-4 py-2 pointer-events-none select-none flex justify-center group-data-[collapsible=icon]:hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/doll.gif"
+                alt="Doll"
+                className="w-16 h-16 object-contain"
+              />
+            </div>
+          )}
         </SidebarContent>
 
         <SidebarFooter className="p-3">

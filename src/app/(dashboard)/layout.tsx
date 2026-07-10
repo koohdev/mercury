@@ -100,15 +100,61 @@ export default async function DashboardLayout({
               </main>
             </div>
 
+            {/* Premium, responsive ambient branding animations */}
+            {showFrog && (
+              <>
+                {/* Hello Kitty & Pompompurin: Top right, floating inside main content panel, below header */}
+                <div className="absolute top-[4.5rem] right-4 z-[40] pointer-events-none select-none">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/hello-kitty-pompompurin-stretches-the-face-doodle.gif"
+                    alt="Hello Kitty & Pompompurin"
+                    className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 object-contain"
+                  />
+                </div>
+
+                {/* Kuromi: Top left, floating inside main content panel, below header */}
+                <div className="absolute top-[4.5rem] left-4 z-[40] pointer-events-none select-none">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/kuromi.gif"
+                    alt="Kuromi"
+                    className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 object-contain"
+                  />
+                </div>
+
+                {/* Froghggys: Bottom left, floating inside main content panel */}
+                <div className="absolute bottom-4 left-4 z-[40] pointer-events-none select-none">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/froghggys.gif"
+                    alt="Froghggys"
+                    className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 object-contain"
+                  />
+                </div>
+
+                {/* Sanrio Friends Group: Center right or floating mid-height */}
+                <div className="absolute top-1/2 -translate-y-1/2 right-4 z-[40] pointer-events-none select-none hidden sm:block">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/sanrio-gif-2.gif"
+                    alt="Sanrio Friends"
+                    className="w-14 h-14 sm:w-18 sm:h-18 md:w-22 md:h-22 object-contain"
+                  />
+                </div>
+              </>
+            )}
+
           </SidebarInset>
         </div>
       </SidebarProvider>
       {showFrog && (
         <div className="fixed bottom-4 right-4 z-[9999] pointer-events-none select-none">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/froggy.gif"
             alt="Froggy"
-            className="w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 object-contain"
+            className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 object-contain"
           />
         </div>
       )}
